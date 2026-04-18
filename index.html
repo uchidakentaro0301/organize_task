@@ -56,13 +56,37 @@
                     <button class="open-modal-btn" onclick="openTaskModal()">
                         <span class="icon">＋</span> 新しいタスクを追加
                     </button>
-                    <div class="template-group">
-                        <div class="custom-select-wrapper template-select">
-                            <select id="template-selector"></select>
+                    <button class="template-btn" onclick="openTaskModal(true)" style="border-radius: 14px; border-left: none;">
+                        <span class="icon">📋</span> テンプレートから作成
+                    </button>
+                </div>
+                
+                <div id="taskModal" class="modal-overlay">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 id="modalTitle">タスク登録</h2>
+                            <button class="close-modal" onclick="closeTaskModal()">&times;</button>
                         </div>
-                        <button class="template-btn" onclick="applySelectedTemplate()">
-                            <span class="icon">📋</span> テンプレートで作成
-                        </button>
+                        <div class="modal-body-content">
+                            <div id="modalTemplateArea" style="display: none;">
+                                <label style="font-size: 0.75rem; color: #6366f1; font-weight: bold;">テンプレートを選択</label>
+                                <select id="modal-template-selector" class="modal-input" onchange="handleModalTemplateChange()" style="margin-top: 5px; background: #f8fafc; border: 2px solid #e2e8f0;">
+                                    <option value="">-- テンプレートを選んでください --</option>
+                                    </select>
+                            </div>
+                
+                            <input type="text" id="taskInput" placeholder="タスク名を入力" class="modal-input">
+                            
+                            <div class="modal-date-group">
+                                <input type="date" id="startDate">
+                                <span>→</span>
+                                <input type="date" id="endDate">
+                            </div>
+                            
+                            <textarea id="taskDetail" placeholder="メモ・詳細内容" rows="4" class="modal-input"></textarea>
+                            
+                            <button onclick="addTask()" class="modal-submit-btn">この内容で登録する</button>
+                        </div>
                     </div>
                 </div>
                 <div class="board">

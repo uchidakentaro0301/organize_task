@@ -33,10 +33,10 @@ body {
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   flex-shrink: 0;
-  
+
   /* 【重要】境界線を消し、非常に深くて広い影でメインと馴染ませる */
   border-right: none;
-  box-shadow: 15px 0 45px rgba(0, 0, 0, 0.5); 
+  box-shadow: 15px 0 45px rgba(0, 0, 0, 0.5);
   z-index: 20;
 }
 .sidebar.collapsed {
@@ -109,6 +109,7 @@ body {
   font-size: 1.4rem;
   margin: 0;
 }
+
 /* ===== メイン ===== */
 .main-content {
   flex: 1;
@@ -121,73 +122,116 @@ body {
 .view.active {
   display: block;
 }
-/* ===== アクションボタン ===== */
+
+/* =========================================
+   アクションエリア全体の整列設定
+   ========================================= */
 .top-action-area {
   display: flex;
   gap: 12px;
   margin-bottom: 25px;
+  align-items: center; /* 縦方向の中央揃えを保証 */
+  height: 48px; /* エリア自体の高さを確保 */
+}
+
+/* =========================================
+   共通のボタンデザイン（メイン & テンプレート）
+   ========================================= */
+.open-modal-btn,
+.template-btn {
+  display: flex;
   align-items: center;
-}
-.open-modal-btn {
-  padding: 10px 20px;
-  background: var(--primary-color);
-  color: rgb(73, 148, 218);
+  justify-content: center;
+  gap: 10px;
+  height: 46px; /* 高さを46pxで統一 */
+  padding: 0 24px;
+
+  /* ローズからインディゴへの共通グラデーション */
+  background: linear-gradient(135deg, #f43f5e 0%, #6366f1 100%);
+  color: white;
+
   border: none;
-  border-radius: 12px;
-  font-weight: bold;
+  font-size: 0.95rem;
+  font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+
+  /* 発光するようなシャドウ */
+  box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3), 0 8px 25px rgba(99, 102, 241, 0.2);
 }
+
+/* 個別：メインボタン（独立した丸み） */
+.open-modal-btn {
+  border-radius: 14px;
+}
+
+/* 個別：テンプレートボタン（セレクトボックスと連結するため左側を平らに） */
+.template-btn {
+  border-radius: 0 14px 14px 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.2); /* 連結部のわずかな境界線 */
+}
+
+/* ホバー＆アクティブ（共通） */
+.open-modal-btn:hover,
+.template-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 8px 20px rgba(244, 63, 94, 0.4), 0 12px 35px rgba(99, 102, 241, 0.3);
+}
+
+.open-modal-btn:active,
+.template-btn:active {
+  transform: translateY(0);
+}
+
 .template-group {
   display: flex;
   align-items: center;
 }
-.template-select select {
-  appearance: none;
-  -webkit-appearance: none;
-  background: white;
-  border: 1px solid #cbd5e1;
-  border-radius: 12px 0 0 12px;
-  height: 42px;
-  min-width: 160px;
-  padding: 0 30px 0 15px;
-  font-size: 0.8rem;
-  font-weight: bold;
-  color: #475569;
-  outline: none;
-  cursor: pointer;
-}
 .custom-select-wrapper {
   position: relative;
 }
-.custom-select-wrapper::after {
+
+/* =========================================
+   テンプレート用セレクトボックス
+   ========================================= */
+.template-select select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 46px; /* ボタンと高さを完全に一致させる */
+  min-width: 180px;
+  background: rgba(255, 255, 255, 0.07); /* ガラス風 */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px 0 0 14px; /* 左側だけ丸く */
+  padding: 0 35px 0 15px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+}
+
+/* セレクトボックスの矢印の色を白く調整 */
+.template-select.custom-select-wrapper::after {
   content: "";
   position: absolute;
   top: 50%;
-  right: 12px;
+  right: 15px;
   transform: translateY(-50%);
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
-  border-top: 5px solid #94a3b8;
+  border-top: 5px solid rgba(255, 255, 255, 0.8);
   pointer-events: none;
 }
-.template-btn {
-  height: 42px;
-  padding: 0 20px;
-  border-radius: 0 12px 12px 0;
-  border: 1px solid #cbd5e1;
-  border-left: none;
-  background-image: linear-gradient(to bottom right, #f8fafc, #e2e8f0);
-  color: #475569;
-  font-weight: 850;
-  cursor: pointer;
-  transition: 0.2s;
-  white-space: nowrap;
+
+/* セレクトボックスの選択肢（OS標準対応） */
+.template-select select option {
+  background-color: #1e1b4b; /* 濃い青背景 */
+  color: white;
 }
-.template-btn:hover {
-  background-image: linear-gradient(to top left, #f8fafc, #e2e8f0);
-  color: #1e293b;
-}
+
 /* ===== ダッシュボード ===== */
 .dashboard-grid {
   display: flex;
@@ -400,4 +444,27 @@ body {
   align-items: center;
   justify-content: center;
   gap: 5px;
+}
+
+/* モーダル内の入力欄共通スタイル（selectにも適用） */
+.modal-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.modal-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* テンプレート選択エリアの余白 */
+#modalTemplateArea {
+  margin-bottom: 10px;
+  padding-bottom: 15px;
+  border-bottom: 1px dashed #e2e8f0;
 }

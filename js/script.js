@@ -227,3 +227,58 @@ function checkAutoNotification() {
     lastAutoSentHour = null;
   }
 }
+
+/**
+ * モーダルを開く（isTemplateMode が true ならテンプレート選択を表示）
+ */
+function openTaskModal(isTemplateMode = false) {
+  const modal = document.getElementById('taskModal');
+  const templateArea = document.getElementById('modalTemplateArea');
+  const selector = document.getElementById('modal-template-selector');
+  
+  // 入力欄を初期化
+  document.getElementById('taskInput').value = "";
+  document.getElementById('taskDetail').value = "";
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('startDate').value = today;
+  document.getElementById('endDate').value = today;
+
+  if (isTemplateMode) {
+      // テンプレートモード：選択エリアを表示し、セレクトボックスを初期化
+      templateArea.style.display = "block";
+      selector.value = ""; 
+      document.getElementById('modalTitle').innerText = "テンプレートから作成";
+      
+      // セレクトボックスの中身を最新の taskTemplates から生成（未作成なら実行）
+      selector.innerHTML = '<option value="">-- テンプレートを選んでください --</option>' + 
+          taskTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  } else {
+      // 通常モード：選択エリアを隠す
+      templateArea.style.display = "none";
+      document.getElementById('modalTitle').innerText = "新しいタスクを登録";
+  }
+
+  modal.classList.add('active');
+}
+
+/**
+* モーダル内のセレクトボックスが変わった時の処理
+*/
+function handleModalTemplateChange() {
+  const selectedId = document.getElementById('modal-template-selector').value;
+  const template = taskTemplates.find(t => t.id === selectedId);
+  
+  if (template) {
+      // 選択されたテンプレートの内容を各入力欄に反映
+      document.getElementById('taskInput').value = template.text;
+      document.getElementById('taskDetail').value = template.detail;
+      
+      // 反映させたあとに少し光らせるような演出（任意）
+      const fields = [document.getElementById('taskInput'), document.getElementById('taskDetail')];
+      fields.forEach(f => {
+          f.style.transition = "0.3s";
+          f.style.backgroundColor = "#eef2ff";
+          setTimeout(() => f.style.backgroundColor = "#fff", 300);
+      });
+  }
+}
