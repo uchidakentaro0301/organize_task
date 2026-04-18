@@ -360,9 +360,8 @@ body {
 }
 .modal-submit-btn {
   padding: 12px;
-  background: var(--primary-color);
-  color: white;
-  border: none;
+  background: #d1d1d1;
+  color: black;
   border-radius: 10px;
   font-weight: bold;
   cursor: pointer;

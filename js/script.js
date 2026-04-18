@@ -2,9 +2,10 @@
 let tasks = JSON.parse(localStorage.getItem('myBacklogTasks')) || [];
 
 const taskTemplates = [
-  { id: "meeting", name: "📝 定例会議の準備", text: "定例会議：資料作成", detail: "・前回の議事録確認\n・アジェンダの送付" },
-  { id: "report", name: "📊 週次レポート", text: "週次報告書の作成", detail: "・今週の成果集計\n・次週の予定策定" },
-  { id: "bug", name: "🐛 バグ修正依頼", text: "【不具合】名称未設定", detail: "発生環境：\n再現手順：\n期待動作：" }
+  { id: "meeting", name: "📝 会議の準備", text: "月次・週次・定例会議書名：", detail: "・前回の議事録確認\n\n・アジェンダの送付" },
+  { id: "report", name: "📊 週次レポート", text: "週次報告書名：", detail: "・今週の成果集計\n\n・次週の予定策定" },
+  { id: "bug", name: "🐛 バグ修正依頼", text: "不具合名：", detail: "発生環境：\n\n再現手順：\n\n期待動作：" }, 
+  { id: "test", name: "📓 テストレビュー", text: "【氏名】", detail: "テスト内容：\n\nテスト結果：\n\nテスト改善：" }
 ];
 
 /**
