@@ -1,0 +1,17 @@
+<div class="input-area">
+    <div class="input-container">
+        <h2>タスク作成</h2>
+        <input type="text" id="taskInput" placeholder="タイトルを入力...">
+        <div class="date-input-group">
+            <div class="date-field"><label>開始日</label><input type="date" id="startDate"></div>
+            <div class="date-field"><label>完了予定日</label><input type="date" id="endDate"></div>
+        </div>
+        <textarea id="taskDetail" placeholder="詳細を入力..." rows="3"></textarea>
+        <button class="add-btn" onclick="addTask()">タスクを追加</button>
+    </div>
+</div>
+<div class="board">
+    <div class="column" id="todo"><h2>未着手</h2><div class="task-list"></div></div>
+    <div class="column" id="doing"><h2>進行中</h2><div class="task-list"></div></div>
+    <div class="column" id="done"><h2>完了</h2><div class="task-list"></div></div>
+</div>

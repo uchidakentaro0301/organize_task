@@ -1,0 +1,15 @@
+{
+    "name": "komagoma",
+    "short_name": "Backlog",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#f8f9fa",
+    "theme_color": "#6366f1",
+    "icons": [
+      {
+        "src": "https://iflyer.tv/article/2024/11/21/rose-taylor/",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }

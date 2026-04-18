@@ -1,0 +1,403 @@
+:root {
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 70px;
+  /* 深みのあるトーンを定義 */
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background-color: #f3f4f6;
+  height: 100vh;
+  overflow: hidden;
+}
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+/* ===== サイドバー ===== */
+.sidebar {
+  width: var(--sidebar-width);
+  /* 濃い赤（ワインレッド系）から 濃い青（ミッドナイトブルー系）へのグラデーション */
+  background: linear-gradient(180deg, #4c0519 0%, #1e1b4b 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  flex-shrink: 0;
+  
+  /* 【重要】境界線を消し、非常に深くて広い影でメインと馴染ませる */
+  border-right: none;
+  box-shadow: 15px 0 45px rgba(0, 0, 0, 0.5); 
+  z-index: 20;
+}
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+.sidebar-header {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80px;
+}
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.logo-text {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+.toggle-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+}
+.sidebar-nav {
+  flex-grow: 1;
+}
+/* サイドバー内のナビ項目も背景に馴染むよう調整 */
+.nav-item {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 15px 25px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.nav-item.active {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: bold;
+  border-right: 5px solid white;
+}
+.sidebar.collapsed .nav-text,
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed #slackArrow {
+  display: none;
+}
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 15px 0;
+}
+.sidebar.collapsed .icon {
+  font-size: 1.4rem;
+  margin: 0;
+}
+/* ===== メイン ===== */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 30px;
+}
+.view {
+  display: none;
+}
+.view.active {
+  display: block;
+}
+/* ===== アクションボタン ===== */
+.top-action-area {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 25px;
+  align-items: center;
+}
+.open-modal-btn {
+  padding: 10px 20px;
+  background: var(--primary-color);
+  color: rgb(73, 148, 218);
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+.template-group {
+  display: flex;
+  align-items: center;
+}
+.template-select select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px 0 0 12px;
+  height: 42px;
+  min-width: 160px;
+  padding: 0 30px 0 15px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #475569;
+  outline: none;
+  cursor: pointer;
+}
+.custom-select-wrapper {
+  position: relative;
+}
+.custom-select-wrapper::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #94a3b8;
+  pointer-events: none;
+}
+.template-btn {
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 0 12px 12px 0;
+  border: 1px solid #cbd5e1;
+  border-left: none;
+  background-image: linear-gradient(to bottom right, #f8fafc, #e2e8f0);
+  color: #475569;
+  font-weight: 850;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+.template-btn:hover {
+  background-image: linear-gradient(to top left, #f8fafc, #e2e8f0);
+  color: #1e293b;
+}
+/* ===== ダッシュボード ===== */
+.dashboard-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: stretch;
+}
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.stat-header {
+  background: #f1f5f9;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 2px solid #e2e8f0;
+  gap: 8px;
+}
+.stat-header h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #334155;
+  font-weight: 850;
+}
+.stat-body {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.stat-value {
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: var(--primary-color);
+  line-height: 1;
+}
+.stat-subtext {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  margin-top: 8px;
+  font-weight: bold;
+}
+.stat-card.wide {
+  flex: 2;
+  min-width: 320px;
+}
+.placeholder-box {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  width: 100%;
+  padding: 10px;
+}
+/* ===== モーダル ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-overlay.active {
+  display: flex;
+}
+.modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.modal-body-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 15px;
+}
+.modal-input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+.modal-date-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.modal-date-group input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+.modal-submit-btn {
+  padding: 12px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.modal-submit-btn:hover {
+  filter: brightness(1.1);
+}
+/* ===== サイドバーフッター / Slack ===== */
+.sidebar-footer {
+  padding: 15px;
+  margin-top: auto;
+  background: rgba(0, 0, 0, 0.1);
+}
+.slack-collapsible {
+  margin-bottom: 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.slack-header {
+  padding: 10px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.slack-title-combined {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.slack-body {
+  padding: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+/* サイドバーが閉じている時はSlackの入力欄などは絶対に表示させない */
+.sidebar.collapsed .slack-body {
+  display: none !important;
+}
+.slack-input-group {
+  display: flex;
+  gap: 5px;
+}
+.slack-input-group input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: white;
+  font-size: 0.7rem;
+  padding: 5px;
+  outline: none;
+}
+.test-icon-btn {
+  background: #4facfe;
+  border: none;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.reset-sidebar-btn {
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
