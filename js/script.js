@@ -282,3 +282,53 @@ function handleModalTemplateChange() {
       });
   }
 }
+
+/**
+ * Slack入力欄の編集ロックを切り替える
+ */
+function toggleSlackLock() {
+  const input = document.getElementById('slackUrl');
+  const btn = document.getElementById('slackLockBtn');
+
+  if (input.disabled) {
+      // ロック解除
+      input.disabled = false;
+      btn.innerText = '🔓';
+      btn.title = "編集をロックする";
+      btn.classList.add('unlocked');
+      input.focus(); // すぐに編集できるようにフォーカス
+  } else {
+      // ロック
+      input.disabled = true;
+      btn.innerText = '🔒';
+      btn.title = "編集ロックを解除";
+      btn.classList.remove('unlocked');
+  }
+}
+
+/**
+* 初期化処理 (DOMContentLoaded内に追加)
+*/
+document.addEventListener('DOMContentLoaded', () => {
+  // ...既存の処理...
+
+  // Slack URLが既に入っているなら、編集不可の状態で表示する
+  const savedUrl = localStorage.getItem('slackWebhookUrl');
+  const slackInput = document.getElementById('slackUrl');
+  if (savedUrl && slackInput) {
+      slackInput.value = savedUrl;
+      slackInput.disabled = true; // 確実にロック
+  }
+});
+
+/**
+* URLを保存したあとに自動でロックする設定（お好みで）
+*/
+function saveSlackUrl() {
+  const url = document.getElementById('slackUrl').value;
+  localStorage.setItem('slackWebhookUrl', url);
+  
+  // 保存したら自動でロックに戻す
+  toggleSlackLock();
+  console.log("Slack URLを保存し、ロックしました");
+}

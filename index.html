@@ -39,7 +39,10 @@
                     </div>
                     <div id="slackContent" class="slack-body" style="display: none;">
                         <div class="slack-input-group">
-                            <input type="password" id="slackUrl" placeholder="Webhook URLを入力" onchange="saveSlackUrl()">
+                            <input type="password" id="slackUrl" placeholder="Webhook URLを入力" onchange="saveSlackUrl()" disabled>
+                            
+                            <button id="slackLockBtn" class="lock-icon-btn" onclick="toggleSlackLock()" title="編集ロック解除">🔒</button>
+                            
                             <button class="test-icon-btn" onclick="sendSlackNotification()" title="テスト送信">🚀</button>
                         </div>
                     </div>

@@ -468,3 +468,39 @@ body {
   padding-bottom: 15px;
   border-bottom: 1px dashed #e2e8f0;
 }
+
+/* ロックボタンの基本スタイル */
+.lock-icon-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+/* ロック解除中のボタン（少し目立たせる） */
+.lock-icon-btn.unlocked {
+  background: #f59e0b; /* オレンジ色で警告 */
+  border-color: #f59e0b;
+  color: white;
+}
+
+/* ロック中の入力欄：暗くして「触れない」感を出す */
+#slackUrl:disabled {
+  background: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* 入力欄が有効な時は少し明るく */
+#slackUrl:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #6366f1;
+}
