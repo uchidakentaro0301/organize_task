@@ -1,93 +1,130 @@
-:root {
+/**
+ * Application Theme Styles
+ * * Design System: Glassmorphism & Vibrant Gradients
+ * Architecture: Component-based CSS
+ */
+
+ :root {
+  /* Layout */
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 70px;
-  /* 深みのあるトーンを定義 */
-  --glass-bg: rgba(255, 255, 255, 0.9);
-  --glass-border: rgba(255, 255, 255, 0.2);
+  --header-height: 80px;
+
+  /* Colors - Core */
+  --primary-rose: #f43f5e;
+  --primary-indigo: #6366f1;
+  --bg-main: #f3f4f6;
+  --bg-dark-navy: #1e1b4b;
+  --bg-deep-maroon: #4c0519;
+
+  /* Glassmorphism & Effects */
+  --glass-bg: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(10px);
+  --shadow-standard: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-vibrant: 0 4px 15px rgba(244, 63, 94, 0.3), 0 8px 25px rgba(99, 102, 241, 0.2);
+
+  /* Shared Gradients */
+  --gradient-vibrant: linear-gradient(135deg, var(--primary-rose) 0%, var(--primary-indigo) 100%);
+  --gradient-sidebar: linear-gradient(180deg, var(--bg-deep-maroon) 0%, var(--bg-dark-navy) 100%);
+  --accent-gradient: var(--gradient-vibrant);
 }
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
 
 * {
   box-sizing: border-box;
 }
+
 body {
   margin: 0;
   padding: 0;
-  font-family: "Helvetica Neue", Arial, sans-serif;
-  background-color: #f3f4f6;
+  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
+  background-color: var(--bg-main);
   height: 100vh;
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
 }
+
 .app-container {
   display: flex;
   height: 100vh;
   width: 100vw;
 }
-/* ===== サイドバー ===== */
+
+/* ==========================================================================
+   Sidebar Navigation
+   ========================================================================== */
+
 .sidebar {
-  width: var(--sidebar-width);
-  /* 濃い赤（ワインレッド系）から 濃い青（ミッドナイトブルー系）へのグラデーション */
-  background: linear-gradient(180deg, #4c0519 0%, #1e1b4b 100%);
-  color: white;
   display: flex;
   flex-direction: column;
+  width: var(--sidebar-width);
+  background: var(--gradient-sidebar);
+  color: white;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   flex-shrink: 0;
-
-  /* 【重要】境界線を消し、非常に深くて広い影でメインと馴染ませる */
-  border-right: none;
-  box-shadow: 15px 0 45px rgba(0, 0, 0, 0.5);
   z-index: 20;
+  box-shadow: 15px 0 45px rgba(0, 0, 0, 0.5);
 }
+
 .sidebar.collapsed {
   width: var(--sidebar-collapsed-width);
 }
+
 .sidebar-header {
-  padding: 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 80px;
+  height: var(--header-height);
+  padding: 0 20px;
 }
+
 .logo-area {
   display: flex;
   align-items: center;
   gap: 10px;
   white-space: nowrap;
 }
+
 .logo-text {
   font-weight: bold;
   font-size: 1.1rem;
 }
+
 .toggle-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  color: white;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  color: white;
   font-size: 0.7rem;
+  cursor: pointer;
 }
+
 .sidebar-nav {
   flex-grow: 1;
 }
-/* サイドバー内のナビ項目も背景に馴染むよう調整 */
+
 .nav-item {
   width: 100%;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
   padding: 15px 25px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 12px;
-  transition: all 0.3s;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .nav-item.active {
@@ -96,82 +133,202 @@ body {
   font-weight: bold;
   border-right: 5px solid white;
 }
+
 .sidebar.collapsed .nav-text,
 .sidebar.collapsed .logo-text,
 .sidebar.collapsed #slackArrow {
   display: none;
 }
+
 .sidebar.collapsed .nav-item {
   justify-content: center;
   padding: 15px 0;
 }
-.sidebar.collapsed .icon {
-  font-size: 1.4rem;
-  margin: 0;
+
+/* =========================================
+   Sidebar Glassmorphism Footer & Slack
+   ========================================= */
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 20px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
 }
 
-/* ===== メイン ===== */
+.glass-collapsible,
+.slack-collapsible {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.slack-header {
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.slack-body {
+  padding: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.collapsed .slack-body {
+  display: none !important;
+}
+
+#slackUrl:disabled {
+  background: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.4);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.lock-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lock-icon-btn.unlocked {
+  background: #f59e0b;
+  border-color: #f59e0b;
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 0.75rem;
+}
+
+.glass-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.glass-action-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.glass-action-btn.danger:hover {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+.glass-action-btn.logout:hover {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+  color: #c7d2fe;
+}
+
+.glass-icon-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  padding: 5px 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.glass-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   Main Content Area
+   ========================================================================== */
+
 .main-content {
   flex: 1;
   overflow-y: auto;
   padding: 30px;
 }
+
 .view {
   display: none;
 }
+
 .view.active {
   display: block;
 }
 
-/* =========================================
-   アクションエリア全体の整列設定
-   ========================================= */
 .top-action-area {
   display: flex;
+  align-items: center;
   gap: 12px;
+  height: 48px;
   margin-bottom: 25px;
-  align-items: center; /* 縦方向の中央揃えを保証 */
-  height: 48px; /* エリア自体の高さを確保 */
 }
 
-/* =========================================
-   共通のボタンデザイン（メイン & テンプレート）
-   ========================================= */
+/* ==========================================================================
+   Components: Buttons & Forms
+   ========================================================================== */
+
 .open-modal-btn,
 .template-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  height: 46px; /* 高さを46pxで統一 */
+  height: 46px;
   padding: 0 24px;
-
-  /* ローズからインディゴへの共通グラデーション */
-  background: linear-gradient(135deg, #f43f5e 0%, #6366f1 100%);
+  background: var(--gradient-vibrant);
   color: white;
-
   border: none;
   font-size: 0.95rem;
   font-weight: 800;
+  box-shadow: var(--shadow-vibrant);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-
-  /* 発光するようなシャドウ */
-  box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3), 0 8px 25px rgba(99, 102, 241, 0.2);
 }
 
-/* 個別：メインボタン（独立した丸み） */
 .open-modal-btn {
   border-radius: 14px;
 }
 
-/* 個別：テンプレートボタン（セレクトボックスと連結するため左側を平らに） */
 .template-btn {
   border-radius: 0 14px 14px 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.2); /* 連結部のわずかな境界線 */
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* ホバー＆アクティブ（共通） */
 .open-modal-btn:hover,
 .template-btn:hover {
   transform: translateY(-2px);
@@ -179,41 +336,32 @@ body {
   box-shadow: 0 8px 20px rgba(244, 63, 94, 0.4), 0 12px 35px rgba(99, 102, 241, 0.3);
 }
 
-.open-modal-btn:active,
-.template-btn:active {
-  transform: translateY(0);
-}
-
 .template-group {
   display: flex;
   align-items: center;
 }
+
 .custom-select-wrapper {
   position: relative;
 }
 
-/* =========================================
-   テンプレート用セレクトボックス
-   ========================================= */
 .template-select select {
   appearance: none;
-  -webkit-appearance: none;
-  height: 46px; /* ボタンと高さを完全に一致させる */
+  height: 46px;
   min-width: 180px;
-  background: rgba(255, 255, 255, 0.07); /* ガラス風 */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px 0 0 14px; /* 左側だけ丸く */
   padding: 0 35px 0 15px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  color: white;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px 0 0 14px;
   font-size: 0.85rem;
   font-weight: 700;
   outline: none;
   cursor: pointer;
 }
 
-/* セレクトボックスの矢印の色を白く調整 */
 .template-select.custom-select-wrapper::after {
   content: "";
   position: absolute;
@@ -226,280 +374,440 @@ body {
   pointer-events: none;
 }
 
-/* セレクトボックスの選択肢（OS標準対応） */
 .template-select select option {
-  background-color: #1e1b4b; /* 濃い青背景 */
+  background-color: var(--bg-dark-navy);
   color: white;
 }
 
-/* ===== ダッシュボード ===== */
+/* ==========================================================================
+   Dashboard Stats
+   ========================================================================== */
+
 .dashboard-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
   align-items: stretch;
 }
+
 .stat-card {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
   flex: 1;
   min-width: 180px;
   display: flex;
   flex-direction: column;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: var(--shadow-standard);
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
+
+.stat-card.wide {
+  flex: 2;
+  min-width: 320px;
+}
+
 .stat-header {
-  background: #f1f5f9;
-  height: 45px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 2px solid #e2e8f0;
   gap: 8px;
+  height: 45px;
+  background: #f1f5f9;
+  border-bottom: 2px solid #e2e8f0;
 }
+
 .stat-header h3 {
   margin: 0;
   font-size: 0.85rem;
   color: #334155;
   font-weight: 850;
 }
+
 .stat-body {
-  padding: 20px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding: 20px;
   text-align: center;
 }
+
 .stat-value {
   font-size: 2.8rem;
   font-weight: 900;
-  color: var(--primary-color);
+  color: var(--primary-indigo);
   line-height: 1;
 }
+
 .stat-subtext {
+  margin-top: 8px;
   font-size: 0.65rem;
   color: #94a3b8;
-  margin-top: 8px;
   font-weight: bold;
 }
-.stat-card.wide {
-  flex: 2;
-  min-width: 320px;
-}
-.placeholder-box {
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
-  border-radius: 8px;
-  width: 100%;
-  padding: 10px;
-}
-/* ===== モーダル ===== */
+
+/* =========================================
+   Glassmorphism Modal System
+   ========================================= */
+
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
 }
+
 .modal-overlay.active {
   display: flex;
+  animation: modalFadeIn 0.3s ease;
 }
-.modal-content {
-  background: white;
-  padding: 25px;
-  border-radius: 20px;
+
+.glass-modal {
   width: 90%;
-  max-width: 450px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 28px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+  padding: 35px;
+  color: white;
 }
-.modal-header {
+
+.glass-modal .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 15px;
+  margin-bottom: 25px;
+  padding-bottom: 0;
+  border-bottom: none;
 }
+
+.glass-modal .modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(to right, #fff, #94a3b8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.close-modal-btn,
 .close-modal {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 2rem;
   cursor: pointer;
+  line-height: 1;
+  transition: 0.2s;
 }
-.modal-body-content {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-top: 15px;
+
+.close-modal-btn:hover,
+.close-modal:hover {
+  color: white;
+  transform: rotate(90deg);
 }
-.modal-input {
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
+
+.modal-section {
+  margin-bottom: 20px;
 }
-.modal-date-group {
+
+.modal-section label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.glass-input-field,
+.glass-select-wrapper select {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px;
+  padding: 12px 15px;
+  color: white !important;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.glass-input-field:focus,
+.glass-select-wrapper select:focus {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(99, 102, 241, 0.5) !important;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+}
+
+.modal-date-row {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.modal-date-group input {
-  flex: 1;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+
+.date-separator {
+  color: rgba(255, 255, 255, 0.2);
+  font-weight: bold;
 }
+
+.modal-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.glass-submit-btn {
+  width: 100%;
+  padding: 15px;
+  background: var(--accent-gradient);
+  border: none;
+  border-radius: 15px;
+  color: white;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(244, 63, 94, 0.3);
+  transition: all 0.3s;
+}
+
+.glass-submit-btn:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.1);
+  box-shadow: 0 15px 30px rgba(244, 63, 94, 0.4);
+}
+
+.glass-sub-btn {
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.glass-sub-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  border-color: white;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Legacy white modal (index.html 等) */
+.modal-content {
+  width: 90%;
+  max-width: 450px;
+  padding: 25px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  color: #0f172a;
+}
+
+.modal-content .modal-header {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-content .modal-header h2 {
+  background: none;
+  background-clip: border-box;
+  -webkit-text-fill-color: #0f172a;
+  color: #0f172a;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.modal-input:focus {
+  border-color: var(--primary-indigo);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
 .modal-submit-btn {
   padding: 12px;
   background: #d1d1d1;
   color: black;
+  border: none;
   border-radius: 10px;
   font-weight: bold;
   cursor: pointer;
   transition: 0.2s;
 }
+
 .modal-submit-btn:hover {
-  filter: brightness(1.1);
+  filter: brightness(0.95);
 }
-/* ===== サイドバーフッター / Slack ===== */
-.sidebar-footer {
-  padding: 15px;
-  margin-top: auto;
-  background: rgba(0, 0, 0, 0.1);
+
+/* Task Cards & Interaction */
+.task-card {
+  position: relative;
+  padding-top: 25px;
 }
-.slack-collapsible {
-  margin-bottom: 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.slack-header {
-  padding: 10px;
-  font-size: 0.75rem;
+
+.task-edit-link {
+  position: absolute;
+  top: 12px;
+  right: 15px;
+  font-size: 0.7rem;
+  color: #3b82f6;
   font-weight: bold;
+  text-decoration: none;
   cursor: pointer;
+}
+
+.btn-group {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 6px;
+  margin-top: 15px;
 }
-.slack-title-combined {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.slack-body {
-  padding: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-/* サイドバーが閉じている時はSlackの入力欄などは絶対に表示させない */
-.sidebar.collapsed .slack-body {
-  display: none !important;
-}
-.slack-input-group {
-  display: flex;
-  gap: 5px;
-}
-.slack-input-group input {
+
+.btn-group button {
   flex: 1;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  color: white;
-  font-size: 0.7rem;
-  padding: 5px;
-  outline: none;
-}
-.test-icon-btn {
-  background: #4facfe;
+  padding: 8px 0;
   border: none;
-  border-radius: 4px;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.reset-sidebar-btn {
-  width: 100%;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
-  font-size: 0.7rem;
-  font-weight: bold;
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.btn-group button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* ==========================================================================
+   Login View: Glassmorphism Design
+   ========================================================================== */
+
+#login-view {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-}
-
-/* モーダル内の入力欄共通スタイル（selectにも適用） */
-.modal-input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.modal-input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-/* テンプレート選択エリアの余白 */
-#modalTemplateArea {
-  margin-bottom: 10px;
-  padding-bottom: 15px;
-  border-bottom: 1px dashed #e2e8f0;
-}
-
-/* ロックボタンの基本スタイル */
-.lock-icon-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  font-size: 0.9rem;
-}
-
-/* ロック解除中のボタン（少し目立たせる） */
-.lock-icon-btn.unlocked {
-  background: #f59e0b; /* オレンジ色で警告 */
-  border-color: #f59e0b;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  overflow: hidden;
   color: white;
 }
 
-/* ロック中の入力欄：暗くして「触れない」感を出す */
-#slackUrl:disabled {
-  background: rgba(0, 0, 0, 0.4);
+#blackholeCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+.glass-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  z-index: 1;
+}
+
+.orb-1 {
+  width: 300px;
+  height: 300px;
+  background: rgba(244, 63, 94, 0.4);
+  top: -50px;
+  left: -50px;
+}
+
+.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: rgba(99, 102, 241, 0.3);
+  bottom: -100px;
+  right: -50px;
+}
+
+.glass-login-card {
+  position: relative;
+  z-index: 10;
+  width: 90%;
+  max-width: 400px;
+  padding: 50px 40px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 30px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.login-header h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin: 10px 0 5px;
+  letter-spacing: -1px;
+}
+
+.login-header p {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 40px;
+}
+
+.login-logo-icon {
+  font-size: 3rem;
+}
+
+.google-btn-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.login-footer p {
+  font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.4);
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-/* 入力欄が有効な時は少し明るく */
-#slackUrl:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: #6366f1;
+  margin-top: 30px;
 }

@@ -1,10 +1,12 @@
-// 1. 共通データ管理 (ここだけで宣言)
-let tasks = JSON.parse(localStorage.getItem('myBacklogTasks')) || [];
+/**
+ * script.js - アプリ全体の基盤
+ */
+let tasks = []; // サーバーから取得したデータを保持する配列
 
 const taskTemplates = [
   { id: "meeting", name: "📝 会議の準備", text: "月次・週次・定例会議書名：", detail: "・前回の議事録確認\n\n・アジェンダの送付" },
   { id: "report", name: "📊 週次レポート", text: "週次報告書名：", detail: "・今週の成果集計\n\n・次週の予定策定" },
-  { id: "bug", name: "🐛 バグ修正依頼", text: "不具合名：", detail: "発生環境：\n\n再現手順：\n\n期待動作：" }, 
+  { id: "bug", name: "🐛 バグ修正依頼", text: "不具合名：", detail: "発生環境：\n\n再現手順：\n\n期待動作：" },
   { id: "test", name: "📓 テストレビュー", text: "【氏名】", detail: "テスト内容：\n\nテスト結果：\n\nテスト改善：" }
 ];
 
@@ -14,10 +16,12 @@ const taskTemplates = [
  */
 let lastAutoSentHour = null;
 
-// 2. 初期化
+// 1. 初期化処理
 document.addEventListener('DOMContentLoaded', () => {
-  if (typeof render === 'function') render();
-  if (typeof updateDashboard === 'function') updateDashboard();
+  // ログイン済み（app-containerが存在する）場合のみタスクを読み込む
+  if (document.querySelector('.app-container')) {
+    loadTasksFromServer();
+  }
 
   // テンプレートセレクトの初期化
   const ts = document.getElementById('template-selector');
@@ -27,8 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Slack URL復元
   const savedUrl = localStorage.getItem('slackWebhookUrl');
-  if (savedUrl && document.getElementById('slackUrl')) {
-    document.getElementById('slackUrl').value = savedUrl;
+  const slackInput = document.getElementById('slackUrl');
+  if (savedUrl && slackInput) {
+    slackInput.value = savedUrl;
+    slackInput.disabled = true; // 既存値がある場合は初期ロック
   }
 
   startTitleAnimation();
@@ -40,39 +46,89 @@ document.addEventListener('DOMContentLoaded', () => {
   checkAutoNotification();
 });
 
-// 3. 共通ロジック
+// 2. サーバーから最新のタスクを取得する
+async function loadTasksFromServer() {
+  try {
+    const response = await fetch('api.php?action=fetch_tasks');
+    const data = await response.json();
+
+    // 取得したデータをグローバルのtasksにセット
+    tasks = data;
+
+    // 描画と統計の更新
+    if (typeof render === 'function') render();
+    if (typeof updateDashboard === 'function') updateDashboard();
+  } catch (e) {
+    console.error("データ取得エラー:", e);
+  }
+}
+
+// 互換用: 既存呼び出しに対応
 function saveAndSync() {
   localStorage.setItem('myBacklogTasks', JSON.stringify(tasks));
   if (typeof render === 'function') render();
   if (typeof updateDashboard === 'function') updateDashboard();
 }
 
+// 3. Googleログイン成功時の処理
+async function handleCredentialResponse(response) {
+  const res = await fetch('api.php?action=login_google', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: response.credential })
+  });
+  const result = await res.json();
+  if (result.success) {
+    location.reload(); // 成功したらリロードしてアプリ画面へ
+  }
+}
+
+// 4. UI制御
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const icon = document.getElementById('toggle-icon');
+  sb.classList.toggle('collapsed');
+  if (icon) {
+    icon.innerText = sb.classList.contains('collapsed') ? '❯' : '❮';
+  }
+}
+
 function showView(viewName) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(viewName + 'View').classList.add('active');
-
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('nav-' + viewName).classList.add('active');
-
   if (viewName === 'dashboard' && typeof updateDashboard === 'function') {
     updateDashboard();
   }
 }
 
-function toggleSidebar() {
-  const sb = document.getElementById('sidebar');
-  const icon = document.getElementById('toggle-icon');
-  sb.classList.toggle('collapsed');
-  icon.innerText = sb.classList.contains('collapsed') ? '❯' : '❮';
-}
+// 5. モーダル制御
+function openTaskModal(isTemplateMode = false) {
+  const modal = document.getElementById('taskModal');
+  const templateArea = document.getElementById('modalTemplateArea');
+  const selector = document.getElementById('modal-template-selector');
 
-function openTaskModal() {
-  document.getElementById('taskModal').classList.add('active');
+  // 入力欄リセット
+  document.getElementById('taskInput').value = "";
+  document.getElementById('taskDetail').value = "";
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('startDate').value = today;
   document.getElementById('endDate').value = today;
-  document.getElementById('taskInput').value = "";
-  document.getElementById('taskDetail').value = "";
+
+  if (isTemplateMode) {
+    templateArea.style.display = "block";
+    if (selector) {
+      selector.value = "";
+      selector.innerHTML = '<option value="">-- テンプレートを選んでください --</option>' +
+        taskTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    }
+    document.getElementById('modalTitle').innerText = "テンプレートから作成";
+  } else {
+    templateArea.style.display = "none";
+    document.getElementById('modalTitle').innerText = "新しいタスクを登録";
+  }
+  modal.classList.add('active');
 }
 
 function closeTaskModal() {
@@ -87,6 +143,25 @@ function applySelectedTemplate() {
     document.getElementById('taskInput').value = t.text;
     document.getElementById('taskDetail').value = t.detail;
     document.getElementById('taskInput').focus();
+  }
+}
+
+function handleModalTemplateChange() {
+  const selectedId = document.getElementById('modal-template-selector').value;
+  const template = taskTemplates.find(t => t.id === selectedId);
+
+  if (template) {
+    document.getElementById('taskInput').value = template.text;
+    document.getElementById('taskDetail').value = template.detail;
+
+    const fields = [document.getElementById('taskInput'), document.getElementById('taskDetail')];
+    fields.forEach(f => {
+      f.style.transition = "0.3s";
+      f.style.backgroundColor = "#eef2ff";
+      setTimeout(() => {
+        f.style.backgroundColor = "#fff";
+      }, 300);
+    });
   }
 }
 
@@ -111,15 +186,6 @@ function escapeHTML(str) {
 }
 
 /**
- * Webhook URLを保存する
- */
-function saveSlackUrl() {
-  const url = document.getElementById('slackUrl').value;
-  localStorage.setItem('slackWebhookUrl', url);
-  console.log("Slack URLを保存しました");
-}
-
-/**
  * Slack設定の表示/非表示を切り替える
  */
 function toggleSlackSettings() {
@@ -140,6 +206,41 @@ function toggleSlackSettings() {
     content.style.display = 'none';
     if (arrow) arrow.innerText = '▼';
   }
+}
+
+/**
+ * Slack入力欄の編集ロックを切り替える
+ */
+function toggleSlackLock() {
+  const input = document.getElementById('slackUrl');
+  const btn = document.getElementById('slackLockBtn');
+
+  if (!input || !btn) return;
+
+  if (input.disabled) {
+    // ロック解除
+    input.disabled = false;
+    btn.innerText = '🔓';
+    btn.title = "編集をロックする";
+    btn.classList.add('unlocked');
+    input.focus();
+  } else {
+    // ロック
+    input.disabled = true;
+    btn.innerText = '🔒';
+    btn.title = "編集ロックを解除";
+    btn.classList.remove('unlocked');
+  }
+}
+
+/**
+ * Webhook URLを保存する（保存後は自動でロック）
+ */
+function saveSlackUrl() {
+  const url = document.getElementById('slackUrl').value;
+  localStorage.setItem('slackWebhookUrl', url);
+  toggleSlackLock();
+  console.log("Slack URLを保存し、ロックしました");
 }
 
 /**
@@ -171,10 +272,9 @@ async function sendSlackNotification() {
   }
 
   try {
-    // Slack WebhookへPOST送信
     await fetch(url, {
       method: 'POST',
-      mode: 'no-cors', // Webhookの仕様に合わせて設定
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: message })
     });
@@ -189,6 +289,8 @@ function confirmReset() {
   if (confirm("全てのタスクをリセットしますか？")) {
     tasks = [];
     saveAndSync();
+    if (typeof render === 'function') render();
+    if (typeof updateDashboard === 'function') updateDashboard();
   }
 }
 
@@ -196,10 +298,6 @@ function confirmReset() {
  * =================================================================
  * Slack自動送信ロジック（平日10時・17時）
  * =================================================================
- */
-
-/**
- * 現在時刻をチェックして、条件に合えば送信する
  */
 function checkAutoNotification() {
   const now = new Date();
@@ -214,12 +312,12 @@ function checkAutoNotification() {
   const isTargetHour = (hours === 10 || hours === 17);
   const isTargetMinute = (minutes === 0);
 
-  // 3. 同じ時間に送信済みでないか確認（1分間に何度も実行されるのを防ぐ）
+  // 3. 同じ時間に送信済みでないか確認
   if (isWeekday && isTargetHour && isTargetMinute) {
     if (lastAutoSentHour !== hours) {
       console.log(`自動通知を実行します: ${hours}時0分`);
-      sendSlackNotification(); // 既存の送信関数を実行
-      lastAutoSentHour = hours; // 送信済みとして時間を記録
+      sendSlackNotification();
+      lastAutoSentHour = hours;
     }
   }
 
@@ -227,109 +325,4 @@ function checkAutoNotification() {
   if (minutes !== 0) {
     lastAutoSentHour = null;
   }
-}
-
-/**
- * モーダルを開く（isTemplateMode が true ならテンプレート選択を表示）
- */
-function openTaskModal(isTemplateMode = false) {
-  const modal = document.getElementById('taskModal');
-  const templateArea = document.getElementById('modalTemplateArea');
-  const selector = document.getElementById('modal-template-selector');
-  
-  // 入力欄を初期化
-  document.getElementById('taskInput').value = "";
-  document.getElementById('taskDetail').value = "";
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('startDate').value = today;
-  document.getElementById('endDate').value = today;
-
-  if (isTemplateMode) {
-      // テンプレートモード：選択エリアを表示し、セレクトボックスを初期化
-      templateArea.style.display = "block";
-      selector.value = ""; 
-      document.getElementById('modalTitle').innerText = "テンプレートから作成";
-      
-      // セレクトボックスの中身を最新の taskTemplates から生成（未作成なら実行）
-      selector.innerHTML = '<option value="">-- テンプレートを選んでください --</option>' + 
-          taskTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-  } else {
-      // 通常モード：選択エリアを隠す
-      templateArea.style.display = "none";
-      document.getElementById('modalTitle').innerText = "新しいタスクを登録";
-  }
-
-  modal.classList.add('active');
-}
-
-/**
-* モーダル内のセレクトボックスが変わった時の処理
-*/
-function handleModalTemplateChange() {
-  const selectedId = document.getElementById('modal-template-selector').value;
-  const template = taskTemplates.find(t => t.id === selectedId);
-  
-  if (template) {
-      // 選択されたテンプレートの内容を各入力欄に反映
-      document.getElementById('taskInput').value = template.text;
-      document.getElementById('taskDetail').value = template.detail;
-      
-      // 反映させたあとに少し光らせるような演出（任意）
-      const fields = [document.getElementById('taskInput'), document.getElementById('taskDetail')];
-      fields.forEach(f => {
-          f.style.transition = "0.3s";
-          f.style.backgroundColor = "#eef2ff";
-          setTimeout(() => f.style.backgroundColor = "#fff", 300);
-      });
-  }
-}
-
-/**
- * Slack入力欄の編集ロックを切り替える
- */
-function toggleSlackLock() {
-  const input = document.getElementById('slackUrl');
-  const btn = document.getElementById('slackLockBtn');
-
-  if (input.disabled) {
-      // ロック解除
-      input.disabled = false;
-      btn.innerText = '🔓';
-      btn.title = "編集をロックする";
-      btn.classList.add('unlocked');
-      input.focus(); // すぐに編集できるようにフォーカス
-  } else {
-      // ロック
-      input.disabled = true;
-      btn.innerText = '🔒';
-      btn.title = "編集ロックを解除";
-      btn.classList.remove('unlocked');
-  }
-}
-
-/**
-* 初期化処理 (DOMContentLoaded内に追加)
-*/
-document.addEventListener('DOMContentLoaded', () => {
-  // ...既存の処理...
-
-  // Slack URLが既に入っているなら、編集不可の状態で表示する
-  const savedUrl = localStorage.getItem('slackWebhookUrl');
-  const slackInput = document.getElementById('slackUrl');
-  if (savedUrl && slackInput) {
-      slackInput.value = savedUrl;
-      slackInput.disabled = true; // 確実にロック
-  }
-});
-
-/**
-* URLを保存したあとに自動でロックする設定（お好みで）
-*/
-function saveSlackUrl() {
-  const url = document.getElementById('slackUrl').value;
-  localStorage.setItem('slackWebhookUrl', url);
-  
-  // 保存したら自動でロックに戻す
-  toggleSlackLock();
-  console.log("Slack URLを保存し、ロックしました");
 }

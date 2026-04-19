@@ -1,24 +1,161 @@
-.board { display: flex; gap: 20px; align-items: flex-start; }
-.column { flex: 1; min-width: 300px; padding: 15px; border-radius: 16px; min-height: 80vh; }
-.column h2 { text-align: center; margin: 0 0 20px; padding: 10px; font-size: 0.9rem; font-weight: 900; border-radius: 50px; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
-
-#todo { background-color: #eef2ff; } #todo h2 { background-color: #3b82f6; }
-#doing { background-color: #fff1f1; } #doing h2 { background-color: #ef4444; }
-#done { background-color: #fefce8; } #done h2 { background-color: #eab308; }
-
-.task-list { min-height: 100px; }
-.task-card { position: relative; background: white; padding: 18px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 6px solid #ccc; transition: 0.2s; }
-.task-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-
-.task-card.todo { border-left-color: #64748b; }
-.task-card.doing { border-left-color: #f59e0b; }
-.task-card.done { border-left-color: #10b981; }
-
-.task-title { font-weight: bold; font-size: 1rem; color: #1f2937; margin-bottom: 5px; }
-.task-date-info { font-size: 0.7rem; color: #6b7280; margin-bottom: 10px; }
-.task-detail { font-size: 0.8rem; color: #4b5563; background: #f9fafb; padding: 8px; border-radius: 6px; white-space: pre-wrap; line-height: 1.4; }
-
-.btn-group { display: flex; gap: 5px; margin-top: 12px; flex-wrap: wrap; }
-.btn-group button { padding: 4px 8px; font-size: 0.65rem; font-weight: bold; border-radius: 4px; border: 1px solid #ddd; cursor: pointer; background: white; transition: 0.2s; }
-.btn-group button:hover { background: #f1f5f9; }
-.delete-btn { color: #ef4444 !important; border-color: #fee2e2 !important; }
+.board {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  
+  .column {
+    flex: 1;
+    min-width: 300px;
+    padding: 15px;
+    border-radius: 16px;
+    min-height: 80vh;
+  }
+  
+  .column h2 {
+    text-align: center;
+    margin: 0 0 20px;
+    padding: 10px;
+    font-size: 0.9rem;
+    font-weight: 900;
+    border-radius: 50px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  #todo {
+    background-color: #eef2ff;
+  }
+  
+  #todo h2 {
+    background-color: #3b82f6;
+  }
+  
+  #doing {
+    background-color: #fff1f1;
+  }
+  
+  #doing h2 {
+    background-color: #ef4444;
+  }
+  
+  #done {
+    background-color: #fefce8;
+  }
+  
+  #done h2 {
+    background-color: #eab308;
+  }
+  
+  .task-list {
+    min-height: 100px;
+  }
+  
+  .task-card {
+    position: relative;
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    border-left: 6px solid #ccc;
+    transition: 0.2s;
+  }
+  
+  .task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .task-card.todo {
+    border-left-color: #64748b;
+  }
+  
+  .task-card.doing {
+    border-left-color: #f59e0b;
+  }
+  
+  .task-card.done {
+    border-left-color: #10b981;
+  }
+  
+  .task-title {
+    font-weight: bold;
+    font-size: 1rem;
+    color: #1f2937;
+    margin-bottom: 5px;
+  }
+  
+  .task-date-info {
+    font-size: 0.7rem;
+    color: #6b7280;
+    margin-bottom: 10px;
+  }
+  
+  .task-detail {
+    font-size: 0.8rem;
+    color: #4b5563;
+    background: #f9fafb;
+    padding: 8px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    line-height: 1.4;
+  }
+  
+  .btn-group {
+    display: flex;
+    gap: 5px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .btn-group button {
+    padding: 4px 8px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    background: white;
+    transition: 0.2s;
+  }
+  
+  .btn-group button:hover {
+    background: #f1f5f9;
+  }
+  
+  /* 各ステータス（.btn-group button より詳細度を上げて背景色を適用） */
+  
+  .btn-group .btn-todo {
+    background-color: #64748b;
+    border-color: #475569;
+    color: #fff;
+  }
+  
+  .btn-group .btn-doing {
+    background-color: #f59e0b;
+    border-color: #d97706;
+    color: #111827;
+  }
+  
+  .btn-group .btn-done {
+    background-color: #10b981;
+    border-color: #059669;
+    color: #fff;
+  }
+  
+  .btn-group .btn-delete {
+    background-color: #ef4444;
+    border-color: #dc2626;
+    color: #fff;
+  }
+  
+  .btn-group .btn-todo:hover,
+  .btn-group .btn-doing:hover,
+  .btn-group .btn-done:hover,
+  .btn-group .btn-delete:hover {
+    filter: brightness(1.08);
+  }
