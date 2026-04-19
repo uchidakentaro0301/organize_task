@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const slackInput = document.getElementById('slackUrl');
   if (savedUrl && slackInput) {
     slackInput.value = savedUrl;
-    slackInput.disabled = true; // 既存値がある場合は初期ロック
+    slackInput.disabled = true;
   }
 
   startTitleAnimation();
@@ -79,7 +79,7 @@ async function handleCredentialResponse(response) {
   });
   const result = await res.json();
   if (result.success) {
-    location.reload(); // 成功したらリロードしてアプリ画面へ
+    location.reload();
   }
 }
 
@@ -103,32 +103,43 @@ function showView(viewName) {
   }
 }
 
-// 5. モーダル制御
+/**
+ * js/script.js
+ * モーダルを開く際の初期化処理を修正
+ */
 function openTaskModal(isTemplateMode = false) {
   const modal = document.getElementById('taskModal');
-  const templateArea = document.getElementById('modalTemplateArea');
-  const selector = document.getElementById('modal-template-selector');
+  const submitBtn = document.getElementById('submitBtn');
+  const saveTemplateBtn = document.getElementById('saveTemplateBtn');
+  
+  // 1. モーダルを表示
+  modal.classList.add('active');
 
-  // 入力欄リセット
+  // 2. 編集用IDをクリア（新規登録状態にする）
+  document.getElementById('modalTaskId').value = "";
+  
+  // 3. 【重要】ボタンの役割を「タスク登録」にリセット
+  submitBtn.innerText = "タスク登録"; 
+  submitBtn.onclick = addTask;
+  
+  // 4. 入力欄を空にする
   document.getElementById('taskInput').value = "";
   document.getElementById('taskDetail').value = "";
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('startDate').value = today;
   document.getElementById('endDate').value = today;
 
+  // 5. モードによる表示切り替え
   if (isTemplateMode) {
-    templateArea.style.display = "block";
-    if (selector) {
-      selector.value = "";
-      selector.innerHTML = '<option value="">-- テンプレートを選んでください --</option>' +
-        taskTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-    }
-    document.getElementById('modalTitle').innerText = "テンプレートから作成";
+      document.getElementById('modalTemplateArea').style.display = "block";
+      document.getElementById('modalTitle').innerText = "Template Selection";
+      saveTemplateBtn.style.display = "none";
+      loadTemplates();
   } else {
-    templateArea.style.display = "none";
-    document.getElementById('modalTitle').innerText = "新しいタスクを登録";
+      document.getElementById('modalTemplateArea').style.display = "none";
+      document.getElementById('modalTitle').innerText = "New Task";
+      saveTemplateBtn.style.display = "block";
   }
-  modal.classList.add('active');
 }
 
 function closeTaskModal() {

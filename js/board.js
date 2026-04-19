@@ -80,23 +80,28 @@ function render() {
 }
 
 /**
- * 編集モーダルを開く
+ * js/board.js
+ * 編集モーダルを開く際も確実に登録機能を紐付ける
  */
 function openEditModal(id) {
-    // 1. tasks配列から対象のタスクを探す
     const task = tasks.find(t => t.id == id);
     if (!task) return;
 
-    // 2. モーダルを表示（テンプレート選択は隠す）
+    // 通常のモーダルを開く処理を呼ぶ（これで初期化される）
     openTaskModal(false);
-
-    // 3. モーダル内の各フィールドに既存の値をセット
-    document.getElementById('modalTitle').innerText = "タスクを編集";
-    document.getElementById('modalTaskId').value = task.id; // 隠しフィールドにIDを入れる
+    
+    // 編集用の設定に上書き
+    document.getElementById('modalTitle').innerText = "Edit Task";
+    document.getElementById('modalTaskId').value = task.id;
     document.getElementById('taskInput').value = task.text;
     document.getElementById('taskDetail').value = task.detail;
     document.getElementById('startDate').value = task.startDate;
     document.getElementById('endDate').value = task.endDate;
+    
+    // 編集時も「保存」は addTask 関数が（IDを判別して）担当する
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerText = "Update Task";
+    submitBtn.onclick = addTask; 
 }
 
 /**
