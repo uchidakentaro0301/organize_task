@@ -21,7 +21,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // ログイン済み（app-containerが存在する）場合のみタスクを読み込む
   if (document.querySelector('.app-container')) {
     loadTasksFromServer();
+    loadBacklogMasterData();
   }
+
+  // または showView 関数内（Backlogビューに切り替えた時）
+function showView(viewName) {
+  // ...既存の処理
+  if (viewName === 'backlog' || viewName === 'board') {
+    loadBacklogMasterData(); // ビュー切り替え時に最新情報を取得
+  }
+}
 
   // テンプレートセレクトの初期化
   const ts = document.getElementById('template-selector');
