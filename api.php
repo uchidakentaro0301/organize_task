@@ -77,24 +77,14 @@ switch ($action) {
         }
         break;
 
-        // api.php の case 'fetch_tasks' の部分を以下に差し替え
         case 'fetch_tasks':
-            $sql = "SELECT 
-                        id, 
-                        title as text, 
-                        detail, 
-                        status, 
-                        start_date as startDate, 
-                        end_date as endDate, 
-                        backlog_assignee_id as backlogAssigneeId,
-                        backlog_issue_type_id as backlogIssueTypeId
-                    FROM tasks 
-                    WHERE user_id = ?";
-                    
+            $sql = "SELECT id, title as text, detail, status, start_date as startDate, 
+                    end_date as endDate, backlog_assignee_id as backlogAssigneeId,
+                    backlog_issue_type_id as backlogIssueTypeId
+                    FROM tasks WHERE user_id = ?";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$user_id]); // $uid から $user_id に修正
+            $stmt->execute([$user_id]); // $uid を $user_id に修正
             $res = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
             echo json_encode($res ? $res : []);
             break;
 
@@ -155,25 +145,26 @@ switch ($action) {
         echo json_encode(['success' => true]);
         break;
 
-    case 'fetch_backlog_users':
-        $url = "https://{$space_id}.backlog.com/api/v2/projects/{$project_id}/users?apiKey=" . urlencode($api_key);
-        $raw = @file_get_contents($url);
-        if ($raw === false) {
-            echo json_encode(['success' => false, 'message' => 'Failed to fetch Backlog users']);
+        case 'fetch_backlog_users':
+            // スペースIDは小文字が推奨されます
+            $url = "https://ct_academy.backlog.com/api/v2/projects/{$project_id}/users?apiKey=" . urlencode($api_key);
+            $raw = @file_get_contents($url);
+            if ($raw === false) {
+                echo json_encode([]); // エラー時は空の配列を返す
+                break;
+            }
+            echo $raw;
             break;
-        }
-        echo $raw;
-        break;
 
-    case 'fetch_backlog_types':
-        $url = "https://{$space_id}.backlog.com/api/v2/projects/{$project_id}/issueTypes?apiKey=" . urlencode($api_key);
-        $raw = @file_get_contents($url);
-        if ($raw === false) {
-            echo json_encode(['success' => false, 'message' => 'Failed to fetch Backlog issue types']);
-            break;
-        }
-        echo $raw;
-        break;
+            case 'fetch_backlog_types':
+                $url = "https://ct_academy.backlog.com/api/v2/projects/{$project_id}/issueTypes?apiKey=" . urlencode($api_key);
+                $raw = @file_get_contents($url);
+                if ($raw === false) {
+                    echo json_encode([]); // エラー時は空の配列を返す
+                    break;
+                }
+                echo $raw;
+                break;
 
     case 'sync_to_backlog':
         $d = json_decode(file_get_contents('php://input'), true) ?: [];

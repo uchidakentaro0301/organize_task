@@ -318,24 +318,29 @@ function checkAutoNotification() {
  */
 async function loadBacklogMasterData() {
   try {
-    const uRes = await fetch('api.php?action=fetch_backlog_users');
-    const users = await uRes.json();
+      const uRes = await fetch('api.php?action=fetch_backlog_users');
+      const users = await uRes.json();
 
-    const tRes = await fetch('api.php?action=fetch_backlog_types');
-    const types = await tRes.json();
+      const tRes = await fetch('api.php?action=fetch_backlog_types');
+      const types = await tRes.json();
 
-    const updateSelect = (ids, data) => {
-      ids.forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.innerHTML = data.map(item => `<option value="${item.id}">${item.name}</option>`).join('');
-      });
-    };
+      // 取得したデータが配列であることを確認してから処理する
+      const updateSelect = (ids, data) => {
+          if (!Array.isArray(data)) {
+              console.error("Backlogからのデータが配列ではありません:", data);
+              return;
+          }
+          ids.forEach(id => {
+              const el = document.getElementById(id);
+              if (!el) return;
+              el.innerHTML = data.map(item => `<option value="${item.id}">${item.name}</option>`).join('');
+          });
+      };
 
-    updateSelect(['modalBacklogAssignee', 'backlogViewAssignee'], users);
-    updateSelect(['modalBacklogType', 'backlogViewType'], types);
+      updateSelect(['modalBacklogAssignee', 'backlogViewAssignee'], users);
+      updateSelect(['modalBacklogType', 'backlogViewType'], types);
   } catch (e) {
-    console.error("Backlogデータ取得失敗:", e);
+      console.error("Backlogデータ取得失敗:", e);
   }
 }
 
