@@ -1,10 +1,14 @@
 <?php
 require 'db.php';
+// エラー表示用（デバッグが終わったら削除してください）
+// ini_set('display_errors', 1);
+// error_reporting(E_ALL);
 ?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🚙☁ 👀 My Backlog</title>
     <?php if (!isset($_SESSION['user_id'])): ?>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -17,10 +21,8 @@ require 'db.php';
 <?php if (!isset($_SESSION['user_id'])): ?>
     <div id="login-view">
         <canvas id="blackholeCanvas"></canvas>
-        
         <div class="glass-orb orb-1"></div>
         <div class="glass-orb orb-2"></div>
-        
         <div class="glass-login-card">
             <div class="login-header">
                 <span class="login-logo-icon">🚙☁</span>
@@ -42,7 +44,6 @@ require 'db.php';
             </div>
         </div>
     </div>
-    
     <script src="js/blackhole.js"></script>
 
 <?php else: ?>
@@ -65,6 +66,9 @@ require 'db.php';
                 </button>
                 <button type="button" onclick="showView('dashboard')" id="nav-dashboard" class="nav-item">
                     <span class="icon">📊</span> <span class="nav-text">ダッシュボード</span>
+                </button>
+                <button type="button" onclick="showView('backlog')" id="nav-backlog" class="nav-item">
+                    <span class="icon">🚀</span> <span class="nav-text">Backlog</span>
                 </button>
             </nav>
 
@@ -98,20 +102,19 @@ require 'db.php';
 
         <main class="main-content">
             <div id="boardView" class="view active">
-            <div class="top-action-area">
-                <button type="button" class="open-modal-btn" onclick="openTaskModal()">
-                    <span class="icon">＋</span> 新しいタスクを追加
-                </button>
-    
-                <div style="display: flex; gap: 2px;">
-                    <button type="button" class="template-btn" onclick="openTaskModal(true)" style="border-radius: 14px 0 0 14px;">
-                        <span class="icon">📋</span> テンプレートから作成
+                <div class="top-action-area">
+                    <button type="button" class="open-modal-btn" onclick="openTaskModal()">
+                        <span class="icon">＋</span> 新しいタスクを追加
                     </button>
-                    <button type="button" class="template-btn" onclick="openTemplateCreateMode()" style="border-radius: 0 14px 14px 0; padding: 0 15px; background: #6366f1;">
-                        <span class="icon">＋</span>
-                    </button>
+                    <div style="display: flex; gap: 2px;">
+                        <button type="button" class="template-btn" onclick="openTaskModal(true)" style="border-radius: 14px 0 0 14px;">
+                            <span class="icon">📋</span> テンプレートから作成
+                        </button>
+                        <button type="button" class="template-btn" onclick="openTemplateCreateMode()" style="border-radius: 0 14px 14px 0; padding: 0 15px; background: #6366f1;">
+                            <span class="icon">＋</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
                 <div class="board">
                     <div class="column" id="todo"><h2>未着手</h2><div class="task-list"></div></div>
                     <div class="column" id="doing"><h2>進行中</h2><div class="task-list"></div></div>
@@ -152,13 +155,38 @@ require 'db.php';
                         <div class="stat-header"><h3>期限切れ</h3></div>
                         <div class="stat-body"><div id="overdue-count" class="stat-value">0</div></div>
                     </div>
-                    <div class="stat-card wide">
-                        <div class="stat-header"><h3>ステータス状況</h3></div>
-                        <div class="stat-body"><div class="placeholder-box"></div></div>
+                </div>
+            </div>
+
+            <div id="backlogView" class="view">
+                <div class="dashboard-header"><h1>Direct Registration</h1></div>
+                <div class="glass-modal" style="max-width: 600px; margin: 0 auto; padding: 30px;">
+                    <div class="modal-section">
+                        <label>Issue Type & Assignee</label>
+                        <div class="modal-date-row" style="display: flex; gap: 10px;">
+                            <select id="backlogViewType" class="glass-input-field">
+                                <option value="">種別を取得中...</option>
+                            </select>
+                            <select id="backlogViewAssignee" class="glass-input-field">
+                                <option value="">担当者を取得中...</option>
+                            </select>
+                        </div>
                     </div>
+                    <div class="modal-section">
+                        <label>Task Title</label>
+                        <input type="text" id="backlogViewTitle" placeholder="課題のタイトルを入力" class="glass-input-field">
+                    </div>
+                    <div class="modal-section">
+                        <label>Description</label>
+                        <textarea id="backlogViewDetail" placeholder="詳細な説明を入力してください" rows="5" class="glass-input-field"></textarea>
+                    </div>
+                    <button onclick="registerDirectBacklog()" class="glass-submit-btn" style="background:#00a497; margin-top: 20px;">
+                        🚀 Backlogに即時登録
+                    </button>
                 </div>
             </div>
         </main>
+    </div>
 
     <div id="taskModal" class="modal-overlay">
         <div class="glass-modal">
@@ -170,7 +198,19 @@ require 'db.php';
             <div class="modal-body">
                 <input type="hidden" id="modalTaskId" value="">
 
-                <div id="modalTemplateArea" class="modal-section" style="display: none;">
+                <div class="modal-section" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <label style="color: #00a497; font-weight: bold;">🛰️ Backlog Settings (Sync用)</label>
+                    <div class="modal-date-row" style="display: flex; gap: 10px; margin-top: 8px;">
+                        <select id="modalBacklogType" class="glass-input-field">
+                            <option value="">種別を選択</option>
+                        </select>
+                        <select id="modalBacklogAssignee" class="glass-input-field">
+                            <option value="">担当者を選択</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="modalTemplateArea" class="modal-section" style="display: none; margin-top: 15px;">
                     <label>Template</label>
                     <div class="glass-select-wrapper">
                         <select id="modal-template-selector" onchange="handleModalTemplateChange()">

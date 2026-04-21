@@ -535,26 +535,6 @@ body {
   letter-spacing: 1px;
 }
 
-.glass-input-field,
-.glass-select-wrapper select {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 12px;
-  padding: 12px 15px;
-  color: white !important;
-  font-size: 0.95rem;
-  outline: none;
-  transition: all 0.3s;
-}
-
-.glass-input-field:focus,
-.glass-select-wrapper select:focus {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(99, 102, 241, 0.5) !important;
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
-}
-
 .modal-date-row {
   display: flex;
   align-items: center;
@@ -811,3 +791,53 @@ body {
   color: rgba(255, 255, 255, 0.4);
   margin-top: 30px;
 }
+
+/* ==========================================================================
+   Backlog / ガラスモーダル内の入力（白っぽく見えないスレート系）
+   ========================================================================== */
+   .glass-modal .glass-input-field,
+   .glass-modal .glass-select-wrapper select {
+     width: 100%;
+     appearance: none;
+     -webkit-appearance: none;
+     background: rgba(15, 23, 42, 0.58) !important;
+     border: 1px solid rgba(148, 163, 184, 0.32) !important;
+     border-radius: 12px;
+     padding: 12px 15px;
+     color: #f8fafc !important;
+     font-size: 0.95rem;
+     outline: none;
+     backdrop-filter: blur(12px);
+     -webkit-backdrop-filter: blur(12px);
+     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.22);
+   }
+   .glass-modal .glass-input-field::placeholder {
+     color: rgba(226, 232, 240, 0.45);
+   }
+   .glass-modal .glass-input-field:focus,
+   .glass-modal .glass-select-wrapper select:focus {
+     background: rgba(30, 41, 59, 0.88) !important;
+     border-color: rgba(99, 102, 241, 0.65) !important;
+     box-shadow: 0 0 16px rgba(99, 102, 241, 0.35), inset 0 1px 2px rgba(0, 0, 0, 0.18);
+   }
+   .glass-modal .glass-input-field option {
+     background-color: #1e293b;
+     color: #e2e8f0;
+   }
+   /* Backlog ビューは明るい main 上：カード全体を少し濃く */
+   #backlogView .glass-modal {
+     background: linear-gradient(165deg, rgba(30, 27, 75, 0.9) 0%, rgba(15, 23, 42, 0.94) 100%);
+     border: 1px solid rgba(255, 255, 255, 0.14);
+     box-shadow: 0 24px 56px rgba(15, 23, 42, 0.45);
+     color: #f1f5f9;
+   }
+   #backlogView .glass-modal .glass-input-field,
+   #backlogView .glass-modal select.glass-input-field {
+     background: rgba(2, 6, 23, 0.45) !important;
+     border-color: rgba(148, 163, 184, 0.28) !important;
+   }
+   #backlogView .glass-modal .glass-input-field:focus,
+   #backlogView .glass-modal select.glass-input-field:focus {
+     background: rgba(15, 23, 42, 0.82) !important;
+   }

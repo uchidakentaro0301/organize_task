@@ -57,21 +57,22 @@ function render() {
         if (!list) return;
         list.innerHTML = '';
 
-        // board.js の render() 関数内のループ部分
-        tasks.filter(t => t.status === status).forEach(task => {
+        // board.js の一部抜粋
+        filteredTasks.forEach(task => {
             const card = document.createElement('div');
             card.className = `task-card ${status}`;
             card.innerHTML = `
                 <a class="task-edit-link" onclick="openEditModal('${task.id}')">編集</a>
                 <div class="task-title">${escapeHTML(task.text)}</div>
-                <div class="task-date-info">🗓️ ${task.startDate} 〜 ${task.endDate}</div>
+                <div class="task-date-info">🗓️ ${task.startDate || '-'} 〜 ${task.endDate || '-'}</div>
                 <div class="task-detail">${escapeHTML(task.detail)}</div>
                 
                 <div class="btn-group">
-                    <button class="btn-todo" onclick="updateStatus('${task.id}', 'todo')">未着手</button>
-                    <button class="btn-doing" onclick="updateStatus('${task.id}', 'doing')">進行中</button>
-                    <button class="btn-done" onclick="updateStatus('${task.id}', 'done')">完了</button>
-                    <button class="btn-delete" onclick="deleteTask('${task.id}')">削除</button>
+                    <button class="btn-todo" onclick="updateStatus('${task.id}', 'todo')">未</button>
+                    <button class="btn-doing" onclick="updateStatus('${task.id}', 'doing')">中</button>
+                    <button class="btn-done" onclick="updateStatus('${task.id}', 'done')">済</button>
+                    <button class="btn-backlog-sync" onclick="syncToBacklog('${task.id}')">Backlogに追加</button>
+                    <button class="btn-delete" onclick="deleteTask('${task.id}')">削</button>
                 </div>
             `;
             list.appendChild(card);
@@ -168,4 +169,42 @@ function openTemplateCreateMode() {
         closeTaskModal();
         loadTemplates(); // リスト更新
     };
+}
+
+/**
+ * js/board.js - タスクの描画処理
+ */
+function render() {
+    const columns = ['todo', 'doing', 'done'];
+    
+    columns.forEach(status => {
+        const list = document.querySelector(`#${status} .task-list`);
+        if (!list) return;
+        list.innerHTML = '';
+
+        // 現在のステータスに該当するタスクをフィルタリング
+        const filteredTasks = tasks.filter(t => t.status === status);
+
+        filteredTasks.forEach(task => {
+            const card = document.createElement('div');
+            card.className = `task-card ${status}`;
+            
+            // task.text, task.startDate など、api.phpで指定した名前を使用
+            card.innerHTML = `
+                <a class="task-edit-link" onclick="openEditModal('${task.id}')">編集</a>
+                <div class="task-title">${escapeHTML(task.text)}</div>
+                <div class="task-date-info">🗓️ ${task.startDate || '未設定'} 〜 ${task.endDate || '未設定'}</div>
+                <div class="task-detail">${escapeHTML(task.detail)}</div>
+                
+                <div class="btn-group">
+                    <button class="btn-todo" onclick="updateStatus('${task.id}', 'todo')">未</button>
+                    <button class="btn-doing" onclick="updateStatus('${task.id}', 'doing')">中</button>
+                    <button class="btn-done" onclick="updateStatus('${task.id}', 'done')">済</button>
+                    <button class="btn-backlog-sync" onclick="syncToBacklog('${task.id}')">Backlogに追加</button>
+                    <button class="btn-delete" onclick="deleteTask('${task.id}')">削</button>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+    });
 }
