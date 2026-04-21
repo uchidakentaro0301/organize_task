@@ -92,7 +92,7 @@ switch ($action) {
                     WHERE user_id = ?";
                     
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$uid]);
+            $stmt->execute([$user_id]); // $uid から $user_id に修正
             $res = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             echo json_encode($res ? $res : []);

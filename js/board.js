@@ -182,14 +182,13 @@ function render() {
         if (!list) return;
         list.innerHTML = '';
 
-        // 現在のステータスに該当するタスクをフィルタリング
+        // tasks 配列から現在のステータスに合うものを抽出
         const filteredTasks = tasks.filter(t => t.status === status);
 
         filteredTasks.forEach(task => {
             const card = document.createElement('div');
             card.className = `task-card ${status}`;
             
-            // task.text, task.startDate など、api.phpで指定した名前を使用
             card.innerHTML = `
                 <a class="task-edit-link" onclick="openEditModal('${task.id}')">編集</a>
                 <div class="task-title">${escapeHTML(task.text)}</div>
