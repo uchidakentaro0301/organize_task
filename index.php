@@ -1,5 +1,8 @@
 <?php
 require 'db.php';
+// エラー表示用（デバッグが終わったら削除してください）
+// ini_set('display_errors', 1);
+// error_reporting(E_ALL);
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -57,20 +60,22 @@ require 'db.php';
                     <span id="toggle-icon">❮</span>
                 </button>
             </div>
-                <nav class="sidebar-nav">
-                    <button type="button" onclick="showView('board')" id="nav-board" class="nav-item active">
-                        <span class="icon">🗂️</span> <span class="nav-text">ボード</span>
-                    </button>
-                    <button type="button" onclick="showView('dashboard')" id="nav-dashboard" class="nav-item">
-                        <span class="icon">📊</span> <span class="nav-text">ダッシュボード</span>
-                    </button>
-                    <button type="button" onclick="showView('backlog')" id="nav-backlog" class="nav-item">
-                        <span class="icon">🚀</span> <span class="nav-text">Backlog</span>
-                    </button>
-                    <button type="button" onclick="showView('recurring')" id="nav-recurring" class="nav-item">
-                        <span class="icon">🔄</span> <span class="nav-text">定期タスク</span>
-                    </button>
-                </nav>
+
+            <nav class="sidebar-nav">
+                <button type="button" onclick="showView('board')" id="nav-board" class="nav-item active">
+                    <span class="icon">🗂️</span> <span class="nav-text">ボード</span>
+                </button>
+                <button type="button" onclick="showView('dashboard')" id="nav-dashboard" class="nav-item">
+                    <span class="icon">📊</span> <span class="nav-text">ダッシュボード</span>
+                </button>
+                <button type="button" onclick="showView('backlog')" id="nav-backlog" class="nav-item">
+                    <span class="icon">🚀</span> <span class="nav-text">Backlog</span>
+                </button>
+                <button type="button" onclick="showView('recurring')" id="nav-recurring" class="nav-item">
+                    <span class="icon">🔄</span> <span class="nav-text">定期タスク</span>
+                </button>
+            </nav>
+
             <div class="sidebar-footer">
                 <div class="glass-collapsible">
                     <div class="slack-header" onclick="toggleSlackSettings()">
@@ -184,33 +189,6 @@ require 'db.php';
                     </button>
                 </div>
             </div>
-            <div id="recurringView" class="view">
-    <div class="dashboard-header">
-        <h1>定期タスク管理</h1>
-        <button type="button" class="open-modal-btn" onclick="openRecurringModal()" style="font-size: 0.8rem; height: 38px;">
-            ＋ 新規定期タスク
-        </button>
-    </div>
-    
-    <div class="glass-modal" style="max-width: 800px; margin: 0 auto; padding: 25px;">
-        <p style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 20px;">
-            ※ここに登録したタスクは、平日の自動通知（10:00 / 17:00）の際にSlackへ送信されます。
-        </p>
-        
-        <div style="overflow-x: auto;">
-            <table style="width: 100%; color: white; border-collapse: collapse; min-width: 500px;">
-                <thead>
-                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
-                        <th style="padding: 15px;">タスク内容</th>
-                        <th style="padding: 15px; width: 150px; text-align: right;">操作</th>
-                    </tr>
-                </thead>
-                <tbody id="recurringTableBody">
-                    </tbody>
-            </table>
-        </div>
-    </div>
-</div>
 
             <div id="recurringView" class="view">
                 <div class="dashboard-header">
@@ -240,6 +218,23 @@ require 'db.php';
                 </div>
             </div>
         </main>
+    </div>
+
+    <div id="recurringModal" class="modal-overlay">
+        <div class="glass-modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2 id="recModalTitle">定期タスク登録</h2>
+                <button type="button" class="close-modal-btn" onclick="closeRecurringModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="recTaskId" value="">
+                <div class="modal-section">
+                    <label>タスク名</label>
+                    <input type="text" id="recTaskInput" class="glass-input-field" placeholder="例：月次報告の確認">
+                </div>
+                <button type="button" onclick="saveRecurringTask()" class="glass-submit-btn">保存する</button>
+            </div>
+        </div>
     </div>
 
     <div id="taskModal" class="modal-overlay">
@@ -304,10 +299,9 @@ require 'db.php';
         </div>
     </div>
 
-<?php endif; ?>
-
     <script src="js/script.js"></script>
     <script src="js/board.js"></script>
     <script src="js/dashboard.js"></script>
+<?php endif; ?>
 </body>
 </html>

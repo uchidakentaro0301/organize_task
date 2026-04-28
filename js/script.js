@@ -1,7 +1,7 @@
 /**
- * script.js - アプリ全体の基盤
+ * script.js - アプリ全体の基盤 (整理済み最新版)
  */
-let tasks = []; // サーバーから取得したデータを保持する配列
+let tasks = []; 
 let lastAutoSentHour = null;
 
 const taskTemplates = [
@@ -11,25 +11,19 @@ const taskTemplates = [
   { id: "test", name: "📓 テストレビュー", text: "【氏名】", detail: "テスト内容：\n\nテスト結果：\n\nテスト改善：" }
 ];
 
-// 初期化処理
 document.addEventListener('DOMContentLoaded', () => {
   if (document.querySelector('.app-container')) {
     loadTasksFromServer();
     loadBacklogMasterData();
   }
-
   const ts = document.getElementById('template-selector');
-  if (ts) {
-    ts.innerHTML = taskTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-  }
-
+  if (ts) ts.innerHTML = taskTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  
   const savedUrl = localStorage.getItem('slackWebhookUrl');
-  const slackInput = document.getElementById('slackUrl');
-  if (savedUrl && slackInput) {
-    slackInput.value = savedUrl;
-    slackInput.disabled = true;
+  if (savedUrl && document.getElementById('slackUrl')) {
+    document.getElementById('slackUrl').value = savedUrl;
+    document.getElementById('slackUrl').disabled = true;
   }
-
   startTitleAnimation();
   setInterval(checkAutoNotification, 60000);
   checkAutoNotification();
@@ -41,11 +35,12 @@ async function loadTasksFromServer() {
     tasks = await response.json();
     if (typeof render === 'function') render();
     if (typeof updateDashboard === 'function') updateDashboard();
-  } catch (e) {
-    console.error("データ取得エラー:", e);
-  }
+  } catch (e) { console.error("データ取得エラー:", e); }
 }
 
+/**
+ * 画面切り替え制御
+ */
 function showView(viewName) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const targetView = document.getElementById(viewName + 'View');
@@ -86,7 +81,9 @@ async function loadRecurringTasks() {
 }
 
 function openRecurringModal(id = null, title = '') {
-  document.getElementById('recurringModal').classList.add('active');
+  const modal = document.getElementById('recurringModal');
+  if (!modal) return;
+  modal.classList.add('active');
   document.getElementById('recTaskId').value = id || '';
   document.getElementById('recTaskInput').value = title || '';
   document.getElementById('recModalTitle').innerText = id ? '定期タスク編集' : '定期タスク登録';
@@ -123,7 +120,7 @@ async function deleteRecurringTask(id) {
 }
 
 /**
- * ユーティリティ & 通知
+ * 共通ユーティリティ
  */
 function openTaskModal(isTemplateMode = false) {
   const modal = document.getElementById('taskModal');
@@ -142,7 +139,7 @@ function openTaskModal(isTemplateMode = false) {
   if (isTemplateMode) {
     document.getElementById('modalTemplateArea').style.display = "block";
     document.getElementById('modalTitle').innerText = "Template Selection";
-    loadTemplates();
+    if (typeof loadTemplates === 'function') loadTemplates();
   } else {
     document.getElementById('modalTemplateArea').style.display = "none";
     document.getElementById('modalTitle').innerText = "New Task";
