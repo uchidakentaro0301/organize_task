@@ -232,4 +232,29 @@ switch ($action) {
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;
+
+        // fetch_tasks ケースを修正
+    case 'fetch_tasks':
+        $sql = "SELECT id, title as text, detail, status, start_date as startDate, 
+                end_date as endDate, backlog_assignee_id as backlogAssigneeId,
+                backlog_issue_type_id as backlogIssueTypeId,
+                total_time as totalTime -- totalTimeを追加
+                FROM tasks WHERE user_id = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$user_id]);
+        $res = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode($res ? $res : []);
+        break;
+
+    // 新しく時間を更新するケースを追加
+    case 'update_task_time':
+        $d = json_decode(file_get_contents('php://input'), true);
+        if (!isset($d['id'], $d['totalTime'])) {
+            echo json_encode(['success' => false]);
+            break;
+        }
+        $stmt = $pdo->prepare("UPDATE tasks SET total_time = ? WHERE id = ? AND user_id = ?");
+        $stmt->execute([$d['totalTime'], $d['id'], $user_id]);
+        echo json_encode(['success' => true]);
+        break;
 }

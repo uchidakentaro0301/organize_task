@@ -157,3 +157,66 @@
   .btn-group button:hover {
     filter: brightness(1.08);
   }
+
+  /* board.css に追加 */
+.task-stopwatch {
+  margin-top: 15px;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.timer-label {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #475569;
+  margin-bottom: 5px;
+}
+
+.timer-display {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.timer-btn {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 0.7rem;
+  font-weight: bold;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.timer-btn.start {
+  background-color: #22c55e;
+  color: white;
+}
+
+.timer-btn.start:hover { background-color: #16a34a; }
+
+.timer-btn.stop {
+  background-color: #ef4444;
+  color: white;
+}
+
+.timer-btn.stop:hover { background-color: #dc2626; }
+
+.timer-btn:disabled {
+  background-color: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
