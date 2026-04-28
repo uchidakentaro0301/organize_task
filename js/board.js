@@ -98,11 +98,11 @@ function render() {
                 </div>
                 
                 <div class="btn-group">
-                    <button class="btn-todo" onclick="updateStatus('${task.id}', 'todo')">未</button>
-                    <button class="btn-doing" onclick="updateStatus('${task.id}', 'doing')">中</button>
-                    <button class="btn-done" onclick="updateStatus('${task.id}', 'done')">済</button>
+                    <button class="btn-todo" onclick="updateStatus('${task.id}', 'todo')">未着手</button>
+                    <button class="btn-doing" onclick="updateStatus('${task.id}', 'doing')">処理中</button>
+                    <button class="btn-done" onclick="updateStatus('${task.id}', 'done')">完了</button>
                     <button class="btn-backlog-sync" onclick="syncToBacklog('${task.id}')">Backlog追加</button>
-                    <button class="btn-delete" onclick="deleteTask('${task.id}')">削</button>
+                    <button class="btn-delete" onclick="deleteTask('${task.id}')">削除</button>
                 </div>
             `;
             list.appendChild(card);
