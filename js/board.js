@@ -1,20 +1,34 @@
 /**
- * board.js - タスク操作ロジック
+ * board.js - タスク操作ロジック (最新アップデート版)
  */
 
-// タスク追加
+/**
+ * タスク追加・更新
+ * 新規作成時はBacklog情報を送らず、編集時のみBacklog設定を含める
+ */
 async function addTask() {
+    const taskId = document.getElementById('modalTaskId').value;
     const title = document.getElementById('taskInput').value;
     if (!title) return alert("タスク名を入力してください");
 
     const data = {
-        text: title,
+        id: taskId,
+        title: title,
         startDate: document.getElementById('startDate').value,
         endDate: document.getElementById('endDate').value,
         detail: document.getElementById('taskDetail').value
     };
 
-    const response = await fetch('api.php?action=add_task', {
+    // 編集モード（taskIdがある場合）のみBacklog設定値をデータに含める
+    if (taskId) {
+        data.backlogAssigneeId = document.getElementById('modalBacklogAssignee').value;
+        data.backlogIssueTypeId = document.getElementById('modalBacklogType').value;
+    }
+
+    // taskIdの有無でアクションを切り替え
+    const action = taskId ? 'edit_task' : 'add_task';
+
+    const response = await fetch(`api.php?action=${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -26,72 +40,21 @@ async function addTask() {
     }
 }
 
-// ステータス更新
-async function updateStatus(id, newStatus) {
-    await fetch('api.php?action=update_status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id, status: newStatus })
-    });
-    loadTasksFromServer();
-}
-
-// 削除
-async function deleteTask(id) {
-    if (!confirm("このタスクを削除しますか？")) return;
-    await fetch('api.php?action=delete_task', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id })
-    });
-    loadTasksFromServer();
-}
-
 /**
- * 描画関数：カードの右上に編集ボタンを配置
- */
-function render() {
-    const columns = ['todo', 'doing', 'done'];
-    columns.forEach(status => {
-        const list = document.querySelector(`#${status} .task-list`);
-        if (!list) return;
-        list.innerHTML = '';
-
-        // board.js の一部抜粋
-        filteredTasks.forEach(task => {
-            const card = document.createElement('div');
-            card.className = `task-card ${status}`;
-            card.innerHTML = `
-                <a class="task-edit-link" onclick="openEditModal('${task.id}')">編集</a>
-                <div class="task-title">${escapeHTML(task.text)}</div>
-                <div class="task-date-info">🗓️ ${task.startDate || '-'} 〜 ${task.endDate || '-'}</div>
-                <div class="task-detail">${escapeHTML(task.detail)}</div>
-                
-                <div class="btn-group">
-                    <button class="btn-todo" onclick="updateStatus('${task.id}', 'todo')">未</button>
-                    <button class="btn-doing" onclick="updateStatus('${task.id}', 'doing')">中</button>
-                    <button class="btn-done" onclick="updateStatus('${task.id}', 'done')">済</button>
-                    <button class="btn-backlog-sync" onclick="syncToBacklog('${task.id}')">Backlogに追加</button>
-                    <button class="btn-delete" onclick="deleteTask('${task.id}')">削</button>
-                </div>
-            `;
-            list.appendChild(card);
-        });
-    });
-}
-
-/**
- * js/board.js
- * 編集モーダルを開く際も確実に登録機能を紐付ける
+ * 編集モーダルを開く
+ * 編集時のみBacklog設定エリアを表示する
  */
 function openEditModal(id) {
     const task = tasks.find(t => t.id == id);
     if (!task) return;
 
-    // 通常のモーダルを開く処理を呼ぶ（これで初期化される）
+    // モーダルを初期化して表示
     openTaskModal(false);
     
-    // 編集用の設定に上書き
+    // 編集時はBacklog設定エリア(modalBacklogArea)を表示
+    const backlogArea = document.getElementById('modalBacklogArea');
+    if (backlogArea) backlogArea.style.display = "block";
+
     document.getElementById('modalTitle').innerText = "Edit Task";
     document.getElementById('modalTaskId').value = task.id;
     document.getElementById('taskInput').value = task.text;
@@ -99,80 +62,22 @@ function openEditModal(id) {
     document.getElementById('startDate').value = task.startDate;
     document.getElementById('endDate').value = task.endDate;
     
-    // 編集時も「保存」は addTask 関数が（IDを判別して）担当する
+    // 保存されているBacklog設定をセレクトボックスに反映
+    if (document.getElementById('modalBacklogAssignee')) {
+        document.getElementById('modalBacklogAssignee').value = task.backlogAssigneeId || "";
+    }
+    if (document.getElementById('modalBacklogType')) {
+        document.getElementById('modalBacklogType').value = task.backlogIssueTypeId || "";
+    }
+
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.innerText = "Update Task";
     submitBtn.onclick = addTask; 
 }
 
 /**
- * テンプレート一覧をDBから読み込んでセレクトボックスに反映
- */
-async function loadTemplates() {
-    const res = await fetch('api.php?action=fetch_templates');
-    const templates = await res.json();
-    const selector = document.getElementById('modal-template-selector');
-    
-    if (!selector) return;
-    
-    selector.innerHTML = '<option value="">-- テンプレートを選んでください --</option>';
-    templates.forEach(t => {
-        const opt = document.createElement('option');
-        opt.value = t.id;
-        opt.text = t.name;
-        // データを要素に持たせておく
-        opt.dataset.title = t.title;
-        opt.dataset.detail = t.detail;
-        selector.appendChild(opt);
-    });
-}
-
-/**
- * テンプレート選択時の反映処理
- */
-function handleModalTemplateChange() {
-    const selector = document.getElementById('modal-template-selector');
-    const selectedOption = selector.options[selector.selectedIndex];
-    
-    if (selectedOption.value) {
-        document.getElementById('taskInput').value = selectedOption.dataset.title || "";
-        document.getElementById('taskDetail').value = selectedOption.dataset.detail || "";
-    }
-}
-
-/**
- * テンプレート作成モードでモーダルを開く
- */
-function openTemplateCreateMode() {
-    openTaskModal(false);
-    document.getElementById('modalTitle').innerText = "新規テンプレート作成";
-    document.getElementById('saveTemplateBtn').style.display = "none"; // テンプレート作成中にテンプレート保存ボタンは出さない
-    document.getElementById('submitBtn').innerText = "テンプレートを保存する";
-    
-    // submitBtnのonclickを一時的にテンプレート保存用に書き換える
-    document.getElementById('submitBtn').onclick = async function() {
-        const name = prompt("テンプレート名を入力してください（例：週次報告）");
-        if (!name) return;
-        
-        const data = {
-            name: name,
-            title: document.getElementById('taskInput').value,
-            detail: document.getElementById('taskDetail').value
-        };
-        
-        await fetch('api.php?action=add_template', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
-        });
-        
-        closeTaskModal();
-        loadTemplates(); // リスト更新
-    };
-}
-
-/**
- * js/board.js - タスクの描画処理を更新
+ * 描画関数
+ * タスク詳細を1行制限し、詳細がある場合は「もっと見る」リンクを表示
  */
 function render() {
     const columns = ['todo', 'doing', 'done'];
@@ -190,7 +95,6 @@ function render() {
             card.className = `task-card ${status}`;
             
             const detailText = task.detail ? escapeHTML(task.detail) : "";
-            // 詳細が空でない場合にのみ「もっと見る」を表示する判定
             const hasDetail = task.detail && task.detail.trim().length > 0;
 
             card.innerHTML = `
@@ -203,11 +107,11 @@ function render() {
                 ${hasDetail ? `<span class="toggle-detail-btn" onclick="toggleDetail('${task.id}')" id="btn-toggle-${task.id}">もっと見る</span>` : ''}
                 
                 <div class="btn-group">
-                    <button class="btn-todo" onclick="updateStatus('${task.id}', 'todo')">未</button>
-                    <button class="btn-doing" onclick="updateStatus('${task.id}', 'doing')">中</button>
-                    <button class="btn-done" onclick="updateStatus('${task.id}', 'done')">済</button>
+                    <button class="btn-todo" onclick="updateStatus('${task.id}', 'todo')">未着手</button>
+                    <button class="btn-doing" onclick="updateStatus('${task.id}', 'doing')">進行中</button>
+                    <button class="btn-done" onclick="updateStatus('${task.id}', 'done')">完了</button>
                     <button class="btn-backlog-sync" onclick="syncToBacklog('${task.id}')">Backlogに追加</button>
-                    <button class="btn-delete" onclick="deleteTask('${task.id}')">削</button>
+                    <button class="btn-delete" onclick="deleteTask('${task.id}')">削除</button>
                 </div>
             `;
             list.appendChild(card);
@@ -229,4 +133,80 @@ function toggleDetail(id) {
         detailEl.classList.add('expanded');
         btnEl.innerText = '閉じる';
     }
+}
+
+/**
+ * ステータス更新
+ */
+async function updateStatus(id, newStatus) {
+    await fetch('api.php?action=update_status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, status: newStatus })
+    });
+    loadTasksFromServer();
+}
+
+/**
+ * 削除
+ */
+async function deleteTask(id) {
+    if (!confirm("このタスクを削除しますか？")) return;
+    await fetch('api.php?action=delete_task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id })
+    });
+    loadTasksFromServer();
+}
+
+/**
+ * テンプレート一覧をDBから読み込んでセレクトボックスに反映
+ */
+async function loadTemplates() {
+    const res = await fetch('api.php?action=fetch_templates');
+    const templates = await res.json();
+    const selector = document.getElementById('modal-template-selector');
+    
+    if (!selector) return;
+    
+    selector.innerHTML = '<option value="">-- テンプレートを選んでください --</option>';
+    templates.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.text = t.name;
+        opt.dataset.title = t.title;
+        opt.dataset.detail = t.detail;
+        selector.appendChild(opt);
+    });
+}
+
+/**
+ * テンプレート作成モードでモーダルを開く
+ */
+function openTemplateCreateMode() {
+    openTaskModal(false);
+    document.getElementById('modalTitle').innerText = "新規テンプレート作成";
+    document.getElementById('saveTemplateBtn').style.display = "none";
+    document.getElementById('submitBtn').innerText = "テンプレートを保存する";
+    
+    document.getElementById('submitBtn').onclick = async function() {
+        const name = prompt("テンプレート名を入力してください（例：週次報告）");
+        if (!name) return;
+        
+        const data = {
+            name: name,
+            title: document.getElementById('taskInput').value,
+            detail: document.getElementById('taskDetail').value
+        };
+        
+        await fetch('api.php?action=add_template', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        closeTaskModal();
+        loadTemplates(); // リスト更新
+    };
 }

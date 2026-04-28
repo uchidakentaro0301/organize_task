@@ -1,8 +1,5 @@
 <?php
 require 'db.php';
-// エラー表示用（デバッグが終わったら削除してください）
-// ini_set('display_errors', 1);
-// error_reporting(E_ALL);
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -10,6 +7,7 @@ require 'db.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🚙☁ 👀 My Backlog</title>
+    <link rel="icon" href="data:,">
     <?php if (!isset($_SESSION['user_id'])): ?>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <?php endif; ?>
@@ -198,7 +196,7 @@ require 'db.php';
             <div class="modal-body">
                 <input type="hidden" id="modalTaskId" value="">
 
-                <div class="modal-section" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                <div id="modalBacklogArea" class="modal-section" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
                     <label style="color: #00a497; font-weight: bold;">🛰️ Backlog Settings (Sync用)</label>
                     <div class="modal-date-row" style="display: flex; gap: 10px; margin-top: 8px;">
                         <select id="modalBacklogType" class="glass-input-field">

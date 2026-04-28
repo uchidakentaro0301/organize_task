@@ -409,3 +409,40 @@ async function registerDirectBacklog() {
     console.error("Backlog直接登録エラー:", e);
   }
 }
+
+/**
+ * js/script.js
+ * モーダルを開く際の初期化処理を修正
+ */
+function openTaskModal(isTemplateMode = false) {
+  const modal = document.getElementById('taskModal');
+  const submitBtn = document.getElementById('submitBtn');
+  const saveTemplateBtn = document.getElementById('saveTemplateBtn');
+  const backlogArea = document.getElementById('modalBacklogArea'); // 追加
+
+  modal.classList.add('active');
+  document.getElementById('modalTaskId').value = "";
+
+  // 「新しいタスク」作成時は Backlog 設定を隠す
+  if (backlogArea) backlogArea.style.display = "none";
+
+  submitBtn.innerText = "タスク登録";
+  submitBtn.onclick = addTask;
+
+  document.getElementById('taskInput').value = "";
+  document.getElementById('taskDetail').value = "";
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('startDate').value = today;
+  document.getElementById('endDate').value = today;
+
+  if (isTemplateMode) {
+    document.getElementById('modalTemplateArea').style.display = "block";
+    document.getElementById('modalTitle').innerText = "Template Selection";
+    if (saveTemplateBtn) saveTemplateBtn.style.display = "none";
+    loadTemplates();
+  } else {
+    document.getElementById('modalTemplateArea').style.display = "none";
+    document.getElementById('modalTitle').innerText = "New Task";
+    if (saveTemplateBtn) saveTemplateBtn.style.display = "block";
+  }
+}
