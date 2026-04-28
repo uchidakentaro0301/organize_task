@@ -257,25 +257,40 @@ function saveSlackUrl() {
   console.log("Slack URLを保存しました");
 }
 
+// js/script.js の sendSlackNotification 関数を書き換え
 async function sendSlackNotification() {
   const url = localStorage.getItem('slackWebhookUrl');
-  if (!url) {
-    alert("Slack Webhook URLが設定されていません。");
-    return;
-  }
+  if (!url) return alert("Slack Webhook URLが設定されていません。");
 
   const today = new Date().toISOString().split('T')[0];
   const deadlineToday = tasks.filter(t => t.status !== 'done' && t.endDate === today);
   const overdue = tasks.filter(t => t.status !== 'done' && t.endDate && t.endDate < today);
+  
+  // 定期タスクを取得
+  const recRes = await fetch('api.php?action=fetch_recurring_tasks');
+  const recurringTasks = await recRes.json();
 
-  if (deadlineToday.length === 0 && overdue.length === 0) {
-    alert("今日〆切、または期限切れのタスクはありません。");
+  if (deadlineToday.length === 0 && overdue.length === 0 && recurringTasks.length === 0) {
+    console.log("通知するタスクがありません。");
     return;
   }
 
-  let message = "🔔 *タスク状況のお知らせ*\n";
-  if (overdue.length > 0) message += "🚨 *期限切れ:* " + overdue.length + "件\n";
-  if (deadlineToday.length > 0) message += "📅 *本日〆切:* " + deadlineToday.length + "件\n";
+  let message = "🔔 *本日のタスク状況のお知らせ*\n";
+  
+  if (overdue.length > 0) {
+    message += "\n🚨 *【至急】期限切れ:* " + overdue.length + "件";
+  }
+  if (deadlineToday.length > 0) {
+    message += "\n📅 *本日〆切:* " + deadlineToday.length + "件";
+  }
+  
+  // 定期タスクの追加
+  if (recurringTasks.length > 0) {
+    message += "\n\n🔄 *【定期ルーティン】*";
+    recurringTasks.forEach(rt => {
+      message += `\n・${rt.title}`;
+    });
+  }
 
   try {
     await fetch(url, {
@@ -284,10 +299,9 @@ async function sendSlackNotification() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: message })
     });
-    alert("Slackに通知を送信しました！");
+    console.log("Slack通知を送信しました");
   } catch (e) {
     console.error("Slack送信エラー:", e);
-    alert("通知の送信に失敗しました。");
   }
 }
 
@@ -446,3 +460,53 @@ function openTaskModal(isTemplateMode = false) {
     if (saveTemplateBtn) saveTemplateBtn.style.display = "block";
   }
 }
+
+/**
+ * 定期タスクの管理機能
+ */
+async function loadRecurringTasks() {
+  const res = await fetch('api.php?action=fetch_recurring_tasks');
+  const data = await res.json();
+  const list = document.getElementById('recurringList');
+  if (!list) return;
+
+  list.innerHTML = data.map(t => `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.1); padding:10px 15px; border-radius:10px;">
+          <span>${escapeHTML(t.title)}</span>
+          <button onclick="deleteRecurringTask(${t.id})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold;">削除</button>
+      </div>
+  `).join('');
+}
+
+async function addRecurringTask() {
+  const input = document.getElementById('recurringInput');
+  const title = input.value;
+  if (!title) return;
+
+  await fetch('api.php?action=add_recurring_task', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ title })
+  });
+  input.value = '';
+  loadRecurringTasks();
+}
+
+async function deleteRecurringTask(id) {
+  if (!confirm("削除しますか？")) return;
+  await fetch('api.php?action=delete_recurring_task', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ id })
+  });
+  loadRecurringTasks();
+}
+
+// showViewを拡張して、recurring表示時に読み込むようにする
+const originalShowView = showView;
+showView = function(viewName) {
+  originalShowView(viewName);
+  if (viewName === 'recurring') {
+      loadRecurringTasks();
+  }
+};

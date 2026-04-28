@@ -226,4 +226,28 @@ switch ($action) {
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;
+
+        case 'fetch_recurring_tasks':
+            $stmt = $pdo->prepare("SELECT id, title FROM recurring_tasks WHERE user_id = ? ORDER BY id DESC");
+            $stmt->execute([$user_id]);
+            echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+            break;
+        
+        case 'add_recurring_task':
+            $d = json_decode(file_get_contents('php://input'), true);
+            if (!isset($d['title']) || $d['title'] === '') {
+                echo json_encode(['success' => false]);
+                break;
+            }
+            $stmt = $pdo->prepare("INSERT INTO recurring_tasks (user_id, title) VALUES (?, ?)");
+            $stmt->execute([$user_id, $d['title']]);
+            echo json_encode(['success' => true]);
+            break;
+        
+        case 'delete_recurring_task':
+            $d = json_decode(file_get_contents('php://input'), true);
+            $stmt = $pdo->prepare("DELETE FROM recurring_tasks WHERE id = ? AND user_id = ?");
+            $stmt->execute([$d['id'], $user_id]);
+            echo json_encode(['success' => true]);
+            break;
 }

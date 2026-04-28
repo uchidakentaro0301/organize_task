@@ -68,6 +68,24 @@ require 'db.php';
                 <button type="button" onclick="showView('backlog')" id="nav-backlog" class="nav-item">
                     <span class="icon">🚀</span> <span class="nav-text">Backlog</span>
                 </button>
+                <button type="button" onclick="showView('recurring')" id="nav-recurring" class="nav-item">
+                    <span class="icon">🔄</span> <span class="nav-text">定期タスク</span>
+                </button>
+
+                <div id="recurringView" class="view">
+                    <div class="dashboard-header"><h1>定期タスク管理</h1></div>
+                    <div class="glass-modal" style="max-width: 600px; margin: 0 auto; padding: 30px;">
+                        <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 20px;">
+                            ※ここに登録したタスクは、毎日自動投稿の際に「定期ルーティン」としてSlackに送信されます。
+                        </p>
+                        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                            <input type="text" id="recurringInput" placeholder="新しい定期タスク..." class="glass-input-field">
+                            <button onclick="addRecurringTask()" class="glass-submit-btn" style="width: auto; padding: 0 20px;">追加</button>
+                        </div>
+                        <div id="recurringList" style="display: flex; flex-direction: column; gap: 10px;">
+                            </div>
+                    </div>
+                </div>
             </nav>
 
             <div class="sidebar-footer">
