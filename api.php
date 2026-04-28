@@ -235,12 +235,19 @@ switch ($action) {
         
         case 'add_recurring_task':
             $d = json_decode(file_get_contents('php://input'), true);
-            if (!isset($d['title']) || $d['title'] === '') {
+            if (!isset($d['title']) || empty(trim($d['title']))) {
                 echo json_encode(['success' => false]);
                 break;
             }
             $stmt = $pdo->prepare("INSERT INTO recurring_tasks (user_id, title) VALUES (?, ?)");
-            $stmt->execute([$user_id, $d['title']]);
+            $stmt->execute([$user_id, trim($d['title'])]);
+            echo json_encode(['success' => true]);
+            break;
+        
+        case 'edit_recurring_task': // 更新処理を追加
+            $d = json_decode(file_get_contents('php://input'), true);
+            $stmt = $pdo->prepare("UPDATE recurring_tasks SET title = ? WHERE id = ? AND user_id = ?");
+            $stmt->execute([trim($d['title']), $d['id'], $user_id]);
             echo json_encode(['success' => true]);
             break;
         

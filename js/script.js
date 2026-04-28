@@ -510,3 +510,77 @@ showView = function(viewName) {
       loadRecurringTasks();
   }
 };
+
+async function loadRecurringTasks() {
+  const res = await fetch('api.php?action=fetch_recurring_tasks');
+  const data = await res.json();
+  const tbody = document.getElementById('recurringTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = data.map(t => `
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+      <td style="padding: 15px;">${escapeHTML(t.title)}</td>
+      <td style="padding: 15px; text-align: right; white-space: nowrap;">
+        <button onclick="openRecurringModal(${t.id}, '${escapeHTML(t.title)}')" class="glass-icon-btn" style="color:#6366f1; margin-right:8px;">編集</button>
+        <button onclick="deleteRecurringTask(${t.id})" class="glass-icon-btn" style="color:#ef4444;">削除</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openRecurringModal(id = null, title = '') {
+  document.getElementById('recurringModal').classList.add('active');
+  document.getElementById('recTaskId').value = id || '';
+  document.getElementById('recTaskInput').value = title || '';
+  document.getElementById('recModalTitle').innerText = id ? '定期タスク編集' : '定期タスク登録';
+  setTimeout(() => document.getElementById('recTaskInput').focus(), 100);
+}
+
+function closeRecurringModal() {
+  document.getElementById('recurringModal').classList.remove('active');
+}
+
+async function saveRecurringTask() {
+  const id = document.getElementById('recTaskId').value;
+  const title = document.getElementById('recTaskInput').value;
+  if (!title) return alert("タスク名を入力してください");
+
+  const action = id ? 'edit_recurring_task' : 'add_recurring_task';
+
+  await fetch(`api.php?action=${action}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ id, title })
+  });
+  
+  closeRecurringModal();
+  loadRecurringTasks();
+}
+
+async function deleteRecurringTask(id) {
+  if (!confirm("この定期タスクを削除しますか？")) return;
+  await fetch('api.php?action=delete_recurring_task', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ id })
+  });
+  loadRecurringTasks();
+}
+
+/**
+ * showViewの拡張
+ */
+function showView(viewName) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const targetView = document.getElementById(viewName + 'View');
+  if (targetView) targetView.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navItem = document.getElementById('nav-' + viewName);
+  if (navItem) navItem.classList.add('active');
+
+  // ビューごとのデータ読み込み
+  if (viewName === 'recurring') loadRecurringTasks();
+  if (viewName === 'backlog') loadBacklogMasterData();
+  if (viewName === 'dashboard' && typeof updateDashboard === 'function') updateDashboard();
+}
