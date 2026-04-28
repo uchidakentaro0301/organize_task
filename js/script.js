@@ -584,3 +584,28 @@ function showView(viewName) {
   if (viewName === 'backlog') loadBacklogMasterData();
   if (viewName === 'dashboard' && typeof updateDashboard === 'function') updateDashboard();
 }
+
+/**
+ * js/script.js 内の loadRecurringTasks 関数を修正
+ */
+async function loadRecurringTasks() {
+  const res = await fetch('api.php?action=fetch_recurring_tasks');
+  const data = await res.json();
+  const tbody = document.getElementById('recurringTableBody');
+  if (!tbody) return;
+
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="2" style="padding: 30px; text-align: center; color: rgba(255,255,255,0.3);">登録された定期タスクはありません</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(t => `
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.3s;">
+      <td style="padding: 15px; color: #f1f5f9;">${escapeHTML(t.title)}</td>
+      <td style="padding: 15px; text-align: right; white-space: nowrap;">
+        <button onclick="openRecurringModal(${t.id}, '${escapeHTML(t.title)}')" class="glass-icon-btn" style="color:#818cf8; margin-right:8px; background: rgba(255,255,255,0.05);">編集</button>
+        <button onclick="deleteRecurringTask(${t.id})" class="glass-icon-btn" style="color:#f87171; background: rgba(255,255,255,0.05);">削除</button>
+      </td>
+    </tr>
+  `).join('');
+}

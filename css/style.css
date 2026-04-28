@@ -826,18 +826,25 @@ body {
      color: #e2e8f0;
    }
    /* Backlog ビューは明るい main 上：カード全体を少し濃く */
-   #backlogView .glass-modal {
-     background: linear-gradient(165deg, rgba(30, 27, 75, 0.9) 0%, rgba(15, 23, 42, 0.94) 100%);
-     border: 1px solid rgba(255, 255, 255, 0.14);
-     box-shadow: 0 24px 56px rgba(15, 23, 42, 0.45);
-     color: #f1f5f9;
-   }
-   #backlogView .glass-modal .glass-input-field,
-   #backlogView .glass-modal select.glass-input-field {
-     background: rgba(2, 6, 23, 0.45) !important;
-     border-color: rgba(148, 163, 184, 0.28) !important;
-   }
-   #backlogView .glass-modal .glass-input-field:focus,
-   #backlogView .glass-modal select.glass-input-field:focus {
-     background: rgba(15, 23, 42, 0.82) !important;
-   }
+/* Backlog ビューと定期タスクビューを共通のデザインに */
+#backlogView .glass-modal,
+#recurringView .glass-modal {
+  background: linear-gradient(165deg, rgba(30, 27, 75, 0.9) 0%, rgba(15, 23, 42, 0.94) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.45) !important;
+  color: #f1f5f9 !important;
+}
+
+/* 入力フィールドの統一 */
+#backlogView .glass-input-field,
+#recurringView .glass-input-field {
+  background: rgba(2, 6, 23, 0.45) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: white !important;
+}
+
+#backlogView .glass-input-field:focus,
+#recurringView .glass-input-field:focus {
+  background: rgba(15, 23, 42, 0.82) !important;
+  border-color: rgba(99, 102, 241, 0.65) !important;
+}

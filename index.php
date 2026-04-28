@@ -212,22 +212,33 @@ require 'db.php';
     </div>
 </div>
 
-<div id="recurringModal" class="modal-overlay">
-    <div class="glass-modal" style="max-width: 450px;">
-        <div class="modal-header">
-            <h2 id="recModalTitle">定期タスク登録</h2>
-            <button type="button" class="close-modal-btn" onclick="closeRecurringModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <input type="hidden" id="recTaskId" value="">
-            <div class="modal-section">
-                <label>タスク名</label>
-                <input type="text" id="recTaskInput" class="glass-input-field" placeholder="例：月次報告の確認">
+            <div id="recurringView" class="view">
+                <div class="dashboard-header">
+                    <h1>定期タスク管理</h1>
+                    <button type="button" class="open-modal-btn" onclick="openRecurringModal()" style="font-size: 0.8rem; height: 38px;">
+                        ＋ 新規定期タスク
+                    </button>
+                </div>
+                
+                <div class="glass-modal" style="max-width: 800px; margin: 0 auto; padding: 25px;">
+                    <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 20px;">
+                        ※ここに登録したタスクは、平日の自動通知（10:00 / 17:00）の際にSlackへ送信されます。
+                    </p>
+                    
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; color: #f1f5f9; border-collapse: collapse; min-width: 500px;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left; color: rgba(255,255,255,0.7);">
+                                    <th style="padding: 15px; font-size: 0.9rem;">タスク内容</th>
+                                    <th style="padding: 15px; width: 150px; text-align: right; font-size: 0.9rem;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recurringTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <button type="button" onclick="saveRecurringTask()" class="glass-submit-btn">保存する</button>
-        </div>
-    </div>
-</div>
         </main>
     </div>
 
