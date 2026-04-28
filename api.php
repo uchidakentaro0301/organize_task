@@ -7,43 +7,37 @@ header('Content-Type: application/json');
 $action = $_GET['action'] ?? '';
 $user_id = $_SESSION['user_id'] ?? null;
 
-// Backlog 連携（環境に合わせて書き換え）
-$space_id = 'ct-academy';
+// Backlog 連携設定
+$space_id = 'ct-academy'; // アンダースコアではなくハイフンに修正済み
 $api_key = '4Be3aRFWc2Wxax0ewCSXZjsNiWBQ8vqyil3POfnS79W2xKSzjwdjcmJWN6so6WIO';
 $project_id = 699087;
 
-// ログインしていない場合はエラーを返す
+// ログインしていない場合はエラーを返す（Googleログイン時を除く）
 if (!$user_id && $action !== 'login_google') {
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit;
 }
 
 /**
- * リクエストボディから Backlog 担当者 ID（未指定は null）
+ * リクエストボディから Backlog 担当者 IDを取得
  */
 function backlog_assignee_from_payload(array $d): ?int
 {
     $key = $d['assigneeId'] ?? $d['backlogAssigneeId'] ?? null;
-    if ($key === null || $key === '') {
-        return null;
-    }
-    return (int) $key;
+    return ($key === null || $key === '') ? null : (int) $key;
 }
 
 /**
- * リクエストボディから Backlog 課題種別 ID（未指定は null）
+ * リクエストボディから Backlog 課題種別 IDを取得
  */
 function backlog_issue_type_from_payload(array $d): ?int
 {
     $key = $d['issueTypeId'] ?? $d['backlogIssueTypeId'] ?? null;
-    if ($key === null || $key === '') {
-        return null;
-    }
-    return (int) $key;
+    return ($key === null || $key === '') ? null : (int) $key;
 }
 
 switch ($action) {
-    // api.php 内の switch 文の中に追加
+    // --- テンプレート機能 ---
     case 'fetch_templates':
         $stmt = $pdo->prepare("SELECT id, name, title_template as title, detail_template as detail FROM templates WHERE user_id = ?");
         $stmt->execute([$user_id]);
@@ -57,13 +51,13 @@ switch ($action) {
         echo json_encode(['success' => true]);
         break;
 
+    // --- 認証機能 ---
     case 'login_google':
         $data = json_decode(file_get_contents('php://input'), true);
         if (!isset($data['token'])) {
             echo json_encode(['success' => false, 'message' => 'Token is required']);
             break;
         }
-
         $res = file_get_contents("https://oauth2.googleapis.com/tokeninfo?id_token=" . urlencode($data['token']));
         $payload = json_decode($res, true);
 
@@ -74,16 +68,11 @@ switch ($action) {
 
             if (!$user) {
                 $stmt = $pdo->prepare("INSERT INTO users (google_id, email, username) VALUES (?, ?, ?)");
-                $stmt->execute([
-                    $payload['sub'],
-                    $payload['email'] ?? '',
-                    $payload['name'] ?? ''
-                ]);
+                $stmt->execute([$payload['sub'], $payload['email'] ?? '', $payload['name'] ?? '']);
                 $user_id = $pdo->lastInsertId();
             } else {
                 $user_id = $user['id'];
             }
-
             $_SESSION['user_id'] = $user_id;
             echo json_encode(['success' => true]);
         } else {
@@ -91,16 +80,17 @@ switch ($action) {
         }
         break;
 
-        case 'fetch_tasks':
-            $sql = "SELECT id, title as text, detail, status, start_date as startDate, 
-                    end_date as endDate, backlog_assignee_id as backlogAssigneeId,
-                    backlog_issue_type_id as backlogIssueTypeId
-                    FROM tasks WHERE user_id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$user_id]); // $uid を $user_id に修正
-            $res = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            echo json_encode($res ? $res : []);
-            break;
+    // --- タスク管理機能 ---
+    case 'fetch_tasks':
+        $sql = "SELECT id, title as text, detail, status, start_date as startDate, 
+                end_date as endDate, backlog_assignee_id as backlogAssigneeId,
+                backlog_issue_type_id as backlogIssueTypeId
+                FROM tasks WHERE user_id = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$user_id]); // $user_id を使用
+        $res = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode($res ? $res : []);
+        break;
 
     case 'add_task':
         $d = json_decode(file_get_contents('php://input'), true) ?: [];
@@ -109,7 +99,6 @@ switch ($action) {
             echo json_encode(['success' => false, 'message' => 'Missing required fields']);
             break;
         }
-
         $assignee = backlog_assignee_from_payload($d);
         $issueType = backlog_issue_type_from_payload($d);
         $stmt = $pdo->prepare("INSERT INTO tasks (user_id, title, detail, start_date, end_date, status, backlog_assignee_id, backlog_issue_type_id) VALUES (?, ?, ?, ?, ?, 'todo', ?, ?)");
@@ -141,7 +130,6 @@ switch ($action) {
             echo json_encode(['success' => false, 'message' => 'Missing required fields']);
             break;
         }
-
         $stmt = $pdo->prepare("UPDATE tasks SET status = ? WHERE id = ? AND user_id = ?");
         $stmt->execute([$d['status'], $d['id'], $user_id]);
         echo json_encode(['success' => true]);
@@ -153,32 +141,23 @@ switch ($action) {
             echo json_encode(['success' => false, 'message' => 'Task ID is required']);
             break;
         }
-
         $stmt = $pdo->prepare("DELETE FROM tasks WHERE id = ? AND user_id = ?");
         $stmt->execute([$d['id'], $user_id]);
         echo json_encode(['success' => true]);
         break;
 
-        case 'fetch_backlog_users':
-            // space_id を小文字にし、ハイフンを使用するのが一般的です
-            $url = "https://{$space_id}.backlog.com/api/v2/projects/{$project_id}/users?apiKey=" . urlencode($api_key);
-            $raw = @file_get_contents($url);
-            if ($raw === false) {
-                echo json_encode([]); 
-                break;
-            }
-            echo $raw;
-            break;
-        
-        case 'fetch_backlog_types':
-            $url = "https://ct-academy.backlog.com/api/v2/projects/{$project_id}/issueTypes?apiKey=" . urlencode($api_key);
-            $raw = @file_get_contents($url);
-            if ($raw === false) {
-                echo json_encode([]); 
-                break;
-            }
-            echo $raw;
-            break;
+    // --- Backlog マスタデータ取得 ---
+    case 'fetch_backlog_users':
+        $url = "https://{$space_id}.backlog.com/api/v2/projects/{$project_id}/users?apiKey=" . urlencode($api_key);
+        $raw = @file_get_contents($url);
+        echo ($raw === false) ? json_encode([]) : $raw;
+        break;
+    
+    case 'fetch_backlog_types':
+        $url = "https://{$space_id}.backlog.com/api/v2/projects/{$project_id}/issueTypes?apiKey=" . urlencode($api_key);
+        $raw = @file_get_contents($url);
+        echo ($raw === false) ? json_encode([]) : $raw;
+        break;
 
     case 'sync_to_backlog':
         $d = json_decode(file_get_contents('php://input'), true) ?: [];
@@ -191,7 +170,6 @@ switch ($action) {
             echo json_encode(['success' => false, 'message' => 'issueTypeId is required']);
             break;
         }
-
         $url = "https://{$space_id}.backlog.com/api/v2/issues?apiKey=" . urlencode($api_key);
         $post_data = [
             'projectId' => $project_id,
@@ -203,15 +181,12 @@ switch ($action) {
             'priorityId' => 3,
         ];
         $aid = backlog_assignee_from_payload($d);
-        if ($aid !== null) {
-            $post_data['assigneeId'] = $aid;
-        }
+        if ($aid !== null) $post_data['assigneeId'] = $aid;
 
         if (!function_exists('curl_init')) {
             echo json_encode(['success' => false, 'message' => 'cURL is not available']);
             break;
         }
-
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -219,42 +194,42 @@ switch ($action) {
         curl_exec($ch);
         $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-
         echo json_encode(['success' => ($code === 201)]);
+        break;
+
+    // --- 定期タスク管理機能 (タイトル・詳細・備考対応版) ---
+    case 'fetch_recurring_tasks':
+        $stmt = $pdo->prepare("SELECT id, title, detail, notes FROM recurring_tasks WHERE user_id = ? ORDER BY id DESC");
+        $stmt->execute([$user_id]);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+        break;
+    
+    case 'add_recurring_task':
+        $d = json_decode(file_get_contents('php://input'), true);
+        if (!isset($d['title']) || empty(trim($d['title']))) {
+            echo json_encode(['success' => false]);
+            break;
+        }
+        $stmt = $pdo->prepare("INSERT INTO recurring_tasks (user_id, title, detail, notes) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$user_id, trim($d['title']), $d['detail'] ?? '', $d['notes'] ?? '']);
+        echo json_encode(['success' => true]);
+        break;
+    
+    case 'edit_recurring_task':
+        $d = json_decode(file_get_contents('php://input'), true);
+        $stmt = $pdo->prepare("UPDATE recurring_tasks SET title = ?, detail = ?, notes = ? WHERE id = ? AND user_id = ?");
+        $stmt->execute([trim($d['title']), $d['detail'] ?? '', $d['notes'] ?? '', $d['id'], $user_id]);
+        echo json_encode(['success' => true]);
+        break;
+    
+    case 'delete_recurring_task':
+        $d = json_decode(file_get_contents('php://input'), true);
+        $stmt = $pdo->prepare("DELETE FROM recurring_tasks WHERE id = ? AND user_id = ?");
+        $stmt->execute([$d['id'], $user_id]);
+        echo json_encode(['success' => true]);
         break;
 
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;
-
-        case 'fetch_recurring_tasks':
-            $stmt = $pdo->prepare("SELECT id, title FROM recurring_tasks WHERE user_id = ? ORDER BY id DESC");
-            $stmt->execute([$user_id]);
-            echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
-            break;
-        
-        case 'add_recurring_task':
-            $d = json_decode(file_get_contents('php://input'), true);
-            if (!isset($d['title']) || empty(trim($d['title']))) {
-                echo json_encode(['success' => false]);
-                break;
-            }
-            $stmt = $pdo->prepare("INSERT INTO recurring_tasks (user_id, title) VALUES (?, ?)");
-            $stmt->execute([$user_id, trim($d['title'])]);
-            echo json_encode(['success' => true]);
-            break;
-        
-        case 'edit_recurring_task': // 更新処理を追加
-            $d = json_decode(file_get_contents('php://input'), true);
-            $stmt = $pdo->prepare("UPDATE recurring_tasks SET title = ? WHERE id = ? AND user_id = ?");
-            $stmt->execute([trim($d['title']), $d['id'], $user_id]);
-            echo json_encode(['success' => true]);
-            break;
-        
-        case 'delete_recurring_task':
-            $d = json_decode(file_get_contents('php://input'), true);
-            $stmt = $pdo->prepare("DELETE FROM recurring_tasks WHERE id = ? AND user_id = ?");
-            $stmt->execute([$d['id'], $user_id]);
-            echo json_encode(['success' => true]);
-            break;
 }

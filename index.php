@@ -9,7 +9,7 @@ require 'db.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚙☁ 👀 My Backlog</title>
+    <title>🚙☁ 👀 My little Backlog</title>
     <link rel="icon" href="data:,">
     <?php if (!isset($_SESSION['user_id'])): ?>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -198,17 +198,19 @@ require 'db.php';
                     </button>
                 </div>
                 
-                <div class="glass-modal" style="max-width: 800px; margin: 0 auto; padding: 25px;">
+                <div class="glass-modal" style="max-width: 900px; margin: 0 auto; padding: 25px;">
                     <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 20px;">
                         ※ここに登録したタスクは、平日の自動通知（10:00 / 17:00）の際にSlackへ送信されます。
                     </p>
                     
                     <div style="overflow-x: auto;">
-                        <table style="width: 100%; color: #f1f5f9; border-collapse: collapse; min-width: 500px;">
+                        <table style="width: 100%; color: #f1f5f9; border-collapse: collapse; min-width: 600px;">
                             <thead>
                                 <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left; color: rgba(255,255,255,0.7);">
-                                    <th style="padding: 15px; font-size: 0.9rem;">タスク内容</th>
-                                    <th style="padding: 15px; width: 150px; text-align: right; font-size: 0.9rem;">操作</th>
+                                    <th style="padding: 15px; font-size: 0.9rem;">タイトル</th>
+                                    <th style="padding: 15px; font-size: 0.9rem;">詳細</th>
+                                    <th style="padding: 15px; font-size: 0.9rem;">備考(必要資料)</th>
+                                    <th style="padding: 15px; width: 120px; text-align: right; font-size: 0.9rem;">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="recurringTableBody">
@@ -221,7 +223,7 @@ require 'db.php';
     </div>
 
     <div id="recurringModal" class="modal-overlay">
-        <div class="glass-modal" style="max-width: 450px;">
+        <div class="glass-modal" style="max-width: 500px;">
             <div class="modal-header">
                 <h2 id="recModalTitle">定期タスク登録</h2>
                 <button type="button" class="close-modal-btn" onclick="closeRecurringModal()">&times;</button>
@@ -229,8 +231,16 @@ require 'db.php';
             <div class="modal-body">
                 <input type="hidden" id="recTaskId" value="">
                 <div class="modal-section">
-                    <label>タスク名</label>
+                    <label>タイトル</label>
                     <input type="text" id="recTaskInput" class="glass-input-field" placeholder="例：月次報告の確認">
+                </div>
+                <div class="modal-section">
+                    <label>詳細</label>
+                    <textarea id="recTaskDetail" class="glass-input-field" rows="3" placeholder="タスクの具体的な手順など"></textarea>
+                </div>
+                <div class="modal-section">
+                    <label>備考(必要資料)</label>
+                    <textarea id="recTaskNotes" class="glass-input-field" rows="2" placeholder="例：経費精算用レシート、進捗スプレッドシート"></textarea>
                 </div>
                 <button type="button" onclick="saveRecurringTask()" class="glass-submit-btn">保存する</button>
             </div>
