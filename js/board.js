@@ -172,7 +172,7 @@ function openTemplateCreateMode() {
 }
 
 /**
- * js/board.js - タスクの描画処理
+ * js/board.js - タスクの描画処理を更新
  */
 function render() {
     const columns = ['todo', 'doing', 'done'];
@@ -189,11 +189,18 @@ function render() {
             const card = document.createElement('div');
             card.className = `task-card ${status}`;
             
+            const detailText = task.detail ? escapeHTML(task.detail) : "";
+            // 詳細が空でない場合にのみ「もっと見る」を表示する判定
+            const hasDetail = task.detail && task.detail.trim().length > 0;
+
             card.innerHTML = `
                 <a class="task-edit-link" onclick="openEditModal('${task.id}')">編集</a>
                 <div class="task-title">${escapeHTML(task.text)}</div>
                 <div class="task-date-info">🗓️ ${task.startDate || '未設定'} 〜 ${task.endDate || '未設定'}</div>
-                <div class="task-detail">${escapeHTML(task.detail)}</div>
+                
+                <div id="detail-${task.id}" class="task-detail">${detailText}</div>
+                
+                ${hasDetail ? `<span class="toggle-detail-btn" onclick="toggleDetail('${task.id}')" id="btn-toggle-${task.id}">もっと見る</span>` : ''}
                 
                 <div class="btn-group">
                     <button class="btn-todo" onclick="updateStatus('${task.id}', 'todo')">未</button>
@@ -206,4 +213,20 @@ function render() {
             list.appendChild(card);
         });
     });
+}
+
+/**
+ * 詳細の展開・折り畳みを切り替える関数
+ */
+function toggleDetail(id) {
+    const detailEl = document.getElementById(`detail-${id}`);
+    const btnEl = document.getElementById(`btn-toggle-${id}`);
+    
+    if (detailEl.classList.contains('expanded')) {
+        detailEl.classList.remove('expanded');
+        btnEl.innerText = 'もっと見る';
+    } else {
+        detailEl.classList.add('expanded');
+        btnEl.innerText = '閉じる';
+    }
 }

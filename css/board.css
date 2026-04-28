@@ -1,4 +1,7 @@
-.board {
+/* =========================================
+   Board Layout
+   ========================================= */
+   .board {
     display: flex;
     gap: 20px;
     align-items: flex-start;
@@ -26,34 +29,22 @@
     gap: 8px;
   }
   
-  #todo {
-    background-color: #eef2ff;
-  }
+  #todo { background-color: #eef2ff; }
+  #todo h2 { background-color: #3b82f6; }
   
-  #todo h2 {
-    background-color: #3b82f6;
-  }
+  #doing { background-color: #fff1f1; }
+  #doing h2 { background-color: #ef4444; }
   
-  #doing {
-    background-color: #fff1f1;
-  }
-  
-  #doing h2 {
-    background-color: #ef4444;
-  }
-  
-  #done {
-    background-color: #fefce8;
-  }
-  
-  #done h2 {
-    background-color: #eab308;
-  }
+  #done { background-color: #fefce8; }
+  #done h2 { background-color: #eab308; }
   
   .task-list {
     min-height: 100px;
   }
   
+  /* =========================================
+     Task Cards
+     ========================================= */
   .task-card {
     position: relative;
     background: white;
@@ -63,6 +54,7 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     border-left: 6px solid #ccc;
     transition: 0.2s;
+    padding-top: 25px; /* 編集リンク用の余白 */
   }
   
   .task-card:hover {
@@ -70,17 +62,9 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   }
   
-  .task-card.todo {
-    border-left-color: #64748b;
-  }
-  
-  .task-card.doing {
-    border-left-color: #f59e0b;
-  }
-  
-  .task-card.done {
-    border-left-color: #10b981;
-  }
+  .task-card.todo { border-left-color: #64748b; }
+  .task-card.doing { border-left-color: #f59e0b; }
+  .task-card.done { border-left-color: #10b981; }
   
   .task-title {
     font-weight: bold;
@@ -95,16 +79,54 @@
     margin-bottom: 10px;
   }
   
+  /* --- タスク詳細（1行制限） --- */
   .task-detail {
     font-size: 0.8rem;
     color: #4b5563;
     background: #f9fafb;
     padding: 8px;
     border-radius: 6px;
-    white-space: pre-wrap;
     line-height: 1.4;
+    white-space: normal; /* 改行を無視してクランプを優先 */
+    
+    /* 1行のみ表示し、溢れたら ... にする設定 */
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: all 0.3s ease;
   }
   
+  /* 展開時のスタイル */
+  .task-detail.expanded {
+    display: block; /* ボックス制限を解除 */
+    -webkit-line-clamp: unset;
+    max-height: none;
+    white-space: pre-wrap; /* 展開時は改行を有効にする */
+  }
+  
+  /* 「もっと見る」リンクのスタイル */
+  .toggle-detail-btn {
+    display: inline-block;
+    color: #2563eb; /* リンクらしい青色 */
+    font-size: 0.75rem;
+    cursor: pointer;
+    margin-top: 4px;
+    text-decoration: underline; /* 下線を追加 */
+    background: none;
+    border: none;
+    padding: 0;
+    transition: color 0.2s;
+  }
+  
+  .toggle-detail-btn:hover {
+    color: #1d4ed8;
+    text-decoration: none;
+  }
+  
+  /* =========================================
+     Buttons
+     ========================================= */
   .btn-group {
     display: flex;
     gap: 5px;
@@ -127,35 +149,11 @@
     background: #f1f5f9;
   }
   
-  /* 各ステータス（.btn-group button より詳細度を上げて背景色を適用） */
+  .btn-group .btn-todo { background-color: #64748b; border-color: #475569; color: #fff; }
+  .btn-group .btn-doing { background-color: #f59e0b; border-color: #d97706; color: #111827; }
+  .btn-group .btn-done { background-color: #10b981; border-color: #059669; color: #fff; }
+  .btn-group .btn-delete { background-color: #ef4444; border-color: #dc2626; color: #fff; }
   
-  .btn-group .btn-todo {
-    background-color: #64748b;
-    border-color: #475569;
-    color: #fff;
-  }
-  
-  .btn-group .btn-doing {
-    background-color: #f59e0b;
-    border-color: #d97706;
-    color: #111827;
-  }
-  
-  .btn-group .btn-done {
-    background-color: #10b981;
-    border-color: #059669;
-    color: #fff;
-  }
-  
-  .btn-group .btn-delete {
-    background-color: #ef4444;
-    border-color: #dc2626;
-    color: #fff;
-  }
-  
-  .btn-group .btn-todo:hover,
-  .btn-group .btn-doing:hover,
-  .btn-group .btn-done:hover,
-  .btn-group .btn-delete:hover {
+  .btn-group button:hover {
     filter: brightness(1.08);
   }
