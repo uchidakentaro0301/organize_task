@@ -1,6 +1,6 @@
 <?php
 require 'db.php';
-// エラー表示用（デバッグが終わったら削除してください）
+// エラー表示用（デバッグ時はコメントを外してください）
 // ini_set('display_errors', 1);
 // error_reporting(E_ALL);
 ?>
@@ -198,13 +198,13 @@ require 'db.php';
                     </button>
                 </div>
                 
-                <div class="glass-modal" style="max-width: 900px; margin: 0 auto; padding: 25px;">
+                <div class="glass-modal" style="max-width: 1000px; margin: 0 auto; padding: 25px;">
                     <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 20px;">
                         ※ここに登録したタスクは、平日の自動通知（10:00 / 17:00）の際にSlackへ送信されます。
                     </p>
                     
                     <div style="overflow-x: auto;">
-                        <table style="width: 100%; color: #f1f5f9; border-collapse: collapse; min-width: 600px;">
+                        <table style="width: 100%; color: #f1f5f9; border-collapse: collapse; min-width: 700px;">
                             <thead>
                                 <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left; color: rgba(255,255,255,0.7);">
                                     <th style="padding: 15px; font-size: 0.9rem;">タイトル</th>
@@ -240,7 +240,7 @@ require 'db.php';
                 </div>
                 <div class="modal-section">
                     <label>備考(必要資料)</label>
-                    <textarea id="recTaskNotes" class="glass-input-field" rows="2" placeholder="例：経費精算用レシート、進捗スプレッドシート"></textarea>
+                    <textarea id="recTaskNotes" class="glass-input-field" rows="2" placeholder="例：共有フォルダのパス、参考ドキュメントなど"></textarea>
                 </div>
                 <button type="button" onclick="saveRecurringTask()" class="glass-submit-btn">保存する</button>
             </div>
