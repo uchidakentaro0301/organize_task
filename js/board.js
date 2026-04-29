@@ -1,5 +1,5 @@
 /**
- * board.js - タスク操作ロジック (復元・最新版)
+ * board.js - Liquid Glass UI & Compact Timer Update
  */
 let activeTimers = {};
 
@@ -17,7 +17,6 @@ async function addTask() {
         detail: document.getElementById('taskDetail').value
     };
 
-    // 編集時のみBacklog設定を含める
     if (taskId) {
         data.backlogAssigneeId = document.getElementById('modalBacklogAssignee').value;
         data.backlogIssueTypeId = document.getElementById('modalBacklogType').value;
@@ -41,7 +40,7 @@ function openEditModal(id) {
     const task = tasks.find(t => t.id == id);
     if (!task) return;
 
-    openTaskModal(false); // モーダルを初期化
+    openTaskModal(false); 
     
     const backlogArea = document.getElementById('modalBacklogArea');
     if (backlogArea) backlogArea.style.display = "block";
@@ -65,7 +64,7 @@ function openEditModal(id) {
     submitBtn.onclick = addTask; 
 }
 
-// 描画関数
+// 描画関数 (Liquid Glass UI 適用版)
 function render() {
     const columns = ['todo', 'doing', 'done'];
     columns.forEach(status => {
@@ -87,13 +86,20 @@ function render() {
                 <div id="detail-${task.id}" class="task-detail">${escapeHTML(task.detail)}</div>
                 ${task.detail ? `<span class="toggle-detail-btn" onclick="toggleDetail('${task.id}')" id="btn-toggle-${task.id}">もっと見る</span>` : ''}
 
-                <div class="task-stopwatch">
-                    <div class="timer-label">⏱️ ${task.status === 'done' ? 'TOTAL TIME' : '作業時間'}: 
-                        <span id="display-time-${task.id}" class="timer-display">${formatSeconds(savedTime)}</span>
-                    </div>
-                    <div class="timer-controls">
-                        <button id="start-btn-${task.id}" class="timer-btn start" onclick="startTaskTimer('${task.id}')" ${task.status === 'done' ? 'disabled' : ''}>Start</button>
-                        <button id="stop-btn-${task.id}" class="timer-btn stop" onclick="stopTaskTimer('${task.id}')" disabled>Stop</button>
+                <div class="task-stopwatch liquidGlass-wrapper">
+                    <div class="liquidGlass-effect"></div>
+                    <div class="liquidGlass-tint"></div>
+                    <div class="liquidGlass-shine"></div>
+                    
+                    <div class="timer-content-inner" style="z-index: 3; display: flex; width: 100%; align-items: center; gap: 10px;">
+                        <div class="timer-display-container" style="flex: 1;">
+                            <div class="timer-label" style="font-size: 0.5rem; font-weight: 800; color: rgba(0,0,0,0.4); margin-bottom: 2px;">● REC</div>
+                            <div id="display-time-${task.id}" class="liquidGlass-text" style="font-family: 'Orbitron', monospace; font-size: 1.1rem; font-weight: 700; color: #000; text-align: center;">${formatSeconds(savedTime)}</div>
+                        </div>
+                        <div class="timer-controls" style="display: flex; flex-direction: column; gap: 2px;">
+                            <button id="start-btn-${task.id}" class="timer-btn start" onclick="startTaskTimer('${task.id}')" ${task.status === 'done' ? 'disabled' : ''}>RUN</button>
+                            <button id="stop-btn-${task.id}" class="timer-btn stop" onclick="stopTaskTimer('${task.id}')" disabled>STOP</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -113,7 +119,7 @@ function render() {
 // ステータス更新
 async function updateStatus(id, newStatus) {
     if (activeTimers[id]) {
-        await stopTaskTimer(id); // 計測中なら保存
+        await stopTaskTimer(id); 
     }
     await fetch('api.php?action=update_status', {
         method: 'POST',
@@ -134,12 +140,13 @@ async function deleteTask(id) {
     loadTasksFromServer();
 }
 
-// 以下、ストップウォッチ・詳細開閉・テンプレート関連の関数
+// 秒フォーマット (コンパクト化)
 function formatSeconds(s) {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     const sec = s % 60;
-    return h > 0 ? `${h}時間${m}分${sec}秒` : `${m}分${sec}秒`;
+    const pad = (num) => String(num).padStart(2, '0');
+    return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
 }
 
 function startTaskTimer(id) {
@@ -166,12 +173,13 @@ async function stopTaskTimer(id) {
 async function saveTimerToDB(id) {
     const displayStr = document.getElementById(`display-time-${id}`).innerText;
     let totalSeconds = 0;
-    const h = displayStr.match(/(\d+)時間/);
-    const m = displayStr.match(/(\d+)分/);
-    const s = displayStr.match(/(\d+)秒/);
-    if (h) totalSeconds += parseInt(h[1]) * 3600;
-    if (m) totalSeconds += parseInt(m[1]) * 60;
-    if (s) totalSeconds += parseInt(s[1]);
+    const parts = displayStr.split(':').map(Number);
+    
+    if (parts.length === 3) {
+        totalSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else if (parts.length === 2) {
+        totalSeconds = parts[0] * 60 + parts[1];
+    }
 
     await fetch('api.php?action=update_task_time', {
         method: 'POST',

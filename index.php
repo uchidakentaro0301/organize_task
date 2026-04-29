@@ -313,5 +313,14 @@ require 'db.php';
     <script src="js/board.js"></script>
     <script src="js/dashboard.js"></script>
 <?php endif; ?>
+
+<svg style="display: none;">
+  <defs>
+    <filter id="glass-distortion">
+      <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="10" />
+    </filter>
+  </defs>
+</svg>
 </body>
 </html>
