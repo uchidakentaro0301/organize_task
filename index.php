@@ -12,7 +12,7 @@ require 'db.php';
     <title>🚙☁ 👀 My little Backlog</title>
     <link rel="icon" href="data:,">
     <?php if (!isset($_SESSION['user_id'])): ?>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
     <?php endif; ?>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/board.css">
@@ -31,13 +31,21 @@ require 'db.php';
                 <p>Smart Task Management</p>
             </div>
             <div class="login-body">
-                <div id="g_id_onload"
-                     data-client_id="561494858012-hop2mqad9hts9ur2neqtnaei7uisjb7u.apps.googleusercontent.com"
-                     data-callback="handleCredentialResponse"
-                     data-auto_prompt="false">
-                </div>
+                <div
+                    id="g_id_onload"
+                    data-client_id="561494858012-hop2mqad9hts9ur2neqtnaei7uisjb7u.apps.googleusercontent.com"
+                    data-callback="handleCredentialResponse"
+                    data-auto_prompt="false"
+                ></div>
                 <div class="google-btn-wrapper">
-                    <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-size="large" data-text="signin_with"></div>
+                    <div
+                        class="g_id_signin"
+                        data-type="standard"
+                        data-shape="pill"
+                        data-theme="outline"
+                        data-size="large"
+                        data-text="signin_with"
+                    ></div>
                 </div>
             </div>
             <div class="login-footer">
@@ -87,7 +95,14 @@ require 'db.php';
                     </div>
                     <div id="slackContent" class="slack-body" style="display: none;">
                         <div class="slack-input-group">
-                            <input type="password" id="slackUrl" class="glass-input" placeholder="Webhook URL" onchange="saveSlackUrl()" disabled>
+                            <input
+                                type="password"
+                                id="slackUrl"
+                                class="glass-input"
+                                placeholder="Webhook URL"
+                                onchange="saveSlackUrl()"
+                                disabled
+                            >
                             <button id="slackLockBtn" class="glass-icon-btn" onclick="toggleSlackLock()">🔒</button>
                             <button type="button" class="glass-icon-btn action-test" onclick="sendSlackNotification()">🚀</button>
                         </div>
@@ -111,10 +126,20 @@ require 'db.php';
                         <span class="icon">＋</span> 新しいタスクを追加
                     </button>
                     <div style="display: flex; gap: 2px;">
-                        <button type="button" class="template-btn" onclick="openTaskModal(true)" style="border-radius: 14px 0 0 14px;">
+                        <button
+                            type="button"
+                            class="template-btn"
+                            onclick="openTaskModal(true)"
+                            style="border-radius: 14px 0 0 14px;"
+                        >
                             <span class="icon">📋</span> テンプレートから作成
                         </button>
-                        <button type="button" class="template-btn" onclick="openTemplateCreateMode()" style="border-radius: 0 14px 14px 0; padding: 0 15px; background: #6366f1;">
+                        <button
+                            type="button"
+                            class="template-btn"
+                            onclick="openTemplateCreateMode()"
+                            style="border-radius: 0 14px 14px 0; padding: 0 15px; background: #6366f1;"
+                        >
                             <span class="icon">＋</span>
                         </button>
                     </div>
@@ -183,14 +208,13 @@ require 'db.php';
                             <h3>ステータス配分状況</h3>
                         </div>
                         <div class="stat-body">
-                            <div id="status-distribution-container" class="placeholder-box">
-                                </div>
+                            <div id="status-distribution-container" class="placeholder-box"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="dashboardView" class="view-section" style="display:none;">
+            <div id="dashboardViewLegacy" class="view-section" style="display:none;">
                 <div class="dashboard-grid">
                     <div class="stat-card">
                         <div class="stat-header"><h3>総タスク数</h3></div>
@@ -200,16 +224,34 @@ require 'db.php';
                     <div class="stat-card wide">
                         <div class="stat-header"><h3>ステータス配分状況</h3></div>
                         <div class="stat-body">
-                            <div class="placeholder-box">
-                                </div>
+                            <div class="placeholder-box"></div>
                         </div>
                     </div>
-
-                    </div>
+                </div>
             </div>
+            <div class="stat-card wide">
+        <div class="stat-header">
+            <h3>ステータス配分状況</h3>
+        </div>
+        <div class="stat-body">
+            <div id="status-distribution-container" class="placeholder-box"></div>
+        </div>
+    </div>
+
+    <div class="stat-card wide">
+        <div class="stat-header">
+            <h3>時間消費分析</h3>
+        </div>
+        <div class="stat-body">
+            <div id="time-ranking-container" class="placeholder-box">
+                </div>
+        </div>
+    </div>
 
             <div id="backlogView" class="view">
-                <div class="dashboard-header"><h1>Direct Registration</h1></div>
+                <div class="dashboard-header">
+                    <h1>Direct Registration</h1>
+                </div>
                 <div class="glass-modal" style="max-width: 600px; margin: 0 auto; padding: 30px;">
                     <div class="modal-section">
                         <label>Issue Type & Assignee</label>
@@ -228,7 +270,12 @@ require 'db.php';
                     </div>
                     <div class="modal-section">
                         <label>Description</label>
-                        <textarea id="backlogViewDetail" placeholder="詳細な説明を入力してください" rows="5" class="glass-input-field"></textarea>
+                        <textarea
+                            id="backlogViewDetail"
+                            placeholder="詳細な説明を入力してください"
+                            rows="5"
+                            class="glass-input-field"
+                        ></textarea>
                     </div>
                     <button onclick="registerDirectBacklog()" class="glass-submit-btn" style="background:#00a497; margin-top: 20px;">
                         🚀 Backlogに即時登録
@@ -239,16 +286,21 @@ require 'db.php';
             <div id="recurringView" class="view">
                 <div class="dashboard-header">
                     <h1>定期タスク管理</h1>
-                    <button type="button" class="open-modal-btn" onclick="openRecurringModal()" style="font-size: 0.8rem; height: 38px;">
+                    <button
+                        type="button"
+                        class="open-modal-btn"
+                        onclick="openRecurringModal()"
+                        style="font-size: 0.8rem; height: 38px;"
+                    >
                         ＋ 新規定期タスク
                     </button>
                 </div>
-                
+
                 <div class="glass-modal" style="max-width: 1000px; margin: 0 auto; padding: 25px;">
                     <p style="font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 20px;">
                         ※ここに登録したタスクは、平日の自動通知（10:00 / 17:00）の際にSlackへ送信されます。
                     </p>
-                    
+
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; color: #f1f5f9; border-collapse: collapse; min-width: 700px;">
                             <thead>
@@ -260,7 +312,7 @@ require 'db.php';
                                 </tr>
                             </thead>
                             <tbody id="recurringTableBody">
-                                </tbody>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -299,11 +351,15 @@ require 'db.php';
                 <h2 id="modalTitle">Task Editor</h2>
                 <button type="button" class="close-modal-btn" onclick="closeTaskModal()">&times;</button>
             </div>
-            
+
             <div class="modal-body">
                 <input type="hidden" id="modalTaskId" value="">
 
-                <div id="modalBacklogArea" class="modal-section" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                <div
+                    id="modalBacklogArea"
+                    class="modal-section"
+                    style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);"
+                >
                     <label style="color: #00a497; font-weight: bold;">🛰️ Backlog Settings (Sync用)</label>
                     <div class="modal-date-row" style="display: flex; gap: 10px; margin-top: 8px;">
                         <select id="modalBacklogType" class="glass-input-field">
@@ -328,7 +384,7 @@ require 'db.php';
                     <label>Task Name</label>
                     <input type="text" id="taskInput" placeholder="何を実行しますか？" class="glass-input-field">
                 </div>
-                
+
                 <div class="modal-section">
                     <label>Schedule</label>
                     <div class="modal-date-row">
@@ -337,12 +393,12 @@ require 'db.php';
                         <input type="date" id="endDate" class="glass-input-field">
                     </div>
                 </div>
-                
+
                 <div class="modal-section">
                     <label>Details</label>
                     <textarea id="taskDetail" placeholder="メモ・詳細内容..." rows="4" class="glass-input-field"></textarea>
                 </div>
-                
+
                 <div class="modal-footer">
                     <button type="button" id="submitBtn" onclick="addTask()" class="glass-submit-btn">
                         Confirm Changes
@@ -361,12 +417,12 @@ require 'db.php';
 <?php endif; ?>
 
 <svg style="display: none;">
-  <defs>
-    <filter id="glass-distortion">
-      <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" result="noise" />
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="10" />
-    </filter>
-  </defs>
+    <defs>
+        <filter id="glass-distortion">
+            <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="10" />
+        </filter>
+    </defs>
 </svg>
 </body>
 </html>
