@@ -127,16 +127,29 @@ require 'db.php';
             </div>
 
             <div id="dashboardView" class="view">
-                <div class="dashboard-header"><h1>ダッシュボード</h1></div>
+                <div class="dashboard-header">
+                    <h1>ダッシュボード</h1>
+                </div>
+
                 <div class="dashboard-grid">
                     <div class="stat-card">
-                        <div class="stat-header"><h3>全タスク</h3></div>
-                        <div class="stat-body"><div id="total-count" class="stat-value">0</div></div>
+                        <div class="stat-header">
+                            <h3>総タスク数</h3>
+                        </div>
+                        <div class="stat-body">
+                            <div id="total-count" class="stat-value">0</div>
+                        </div>
                     </div>
+
                     <div class="stat-card">
-                        <div class="stat-header"><h3>残タスク</h3></div>
-                        <div class="stat-body"><div id="remaining-count" class="stat-value">0</div></div>
+                        <div class="stat-header">
+                            <h3>残タスク</h3>
+                        </div>
+                        <div class="stat-body">
+                            <div id="remaining-count" class="stat-value">0</div>
+                        </div>
                     </div>
+
                     <div class="stat-card">
                         <div class="stat-header">
                             <h3>完了率</h3>
@@ -155,9 +168,24 @@ require 'db.php';
                             <div id="period-label" class="stat-subtext">全期間の統計</div>
                         </div>
                     </div>
+
                     <div class="stat-card">
-                        <div class="stat-header"><h3>期限切れ</h3></div>
-                        <div class="stat-body"><div id="overdue-count" class="stat-value">0</div></div>
+                        <div class="stat-header">
+                            <h3>期限切れ</h3>
+                        </div>
+                        <div class="stat-body">
+                            <div id="overdue-count" class="stat-value">0</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card wide">
+                        <div class="stat-header">
+                            <h3>ステータス配分状況</h3>
+                        </div>
+                        <div class="stat-body">
+                            <div id="status-distribution-container" class="placeholder-box">
+                                </div>
+                        </div>
                     </div>
                 </div>
             </div>

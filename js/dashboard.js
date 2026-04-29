@@ -1,36 +1,42 @@
 /**
  * dashboard.js - 集計ロジック
  */
-function updateDashboard() {
+
+/**
+ * ダッシュボード全体の数値を更新
+ */
+async function updateDashboard() {
+    if (!tasks) return;
+
     const total = tasks.length;
     const remaining = tasks.filter(t => t.status !== 'done').length;
     const doneCount = tasks.filter(t => t.status === 'done').length;
     const rate = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+    
     const todayStr = new Date().toISOString().split('T')[0];
     const overdue = tasks.filter(t => t.status !== 'done' && t.endDate && t.endDate < todayStr).length;
-    // 数値の反映
-    if (document.getElementById('total-count')) document.getElementById('total-count').innerText = total;
-    if (document.getElementById('remaining-count')) document.getElementById('remaining-count').innerText = remaining;
-    if (document.getElementById('progress-rate')) document.getElementById('progress-rate').innerText = rate + "%";
-    
-    const overEl = document.getElementById('overdue-count');
-    if (overEl) {
-        overEl.innerText = overdue;
-        overEl.style.color = overdue > 0 ? "#ef4444" : "#4f46e5";
+
+    // 1. 各統計数値の反映
+    const elements = {
+        'total-count': total,
+        'remaining-count': remaining,
+        'progress-rate': rate + "%",
+        'overdue-count': overdue
+    };
+
+    for (const [id, value] of Object.entries(elements)) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerText = value;
+            // 期限切れがある場合は赤文字にする
+            if (id === 'overdue-count') {
+                el.style.color = overdue > 0 ? "#ef4444" : "#4f46e5";
+            }
+        }
     }
-    // ステータス状況の更新
-    const placeholder = document.querySelector('.placeholder-box');
-    if (placeholder) {
-        const todo = tasks.filter(t => t.status === 'todo').length;
-        const doing = tasks.filter(t => t.status === 'doing').length;
-        const done = tasks.filter(t => t.status === 'done').length;
-        placeholder.innerHTML = `
-            <div style="font-size:0.85rem; color:#475569; line-height:1.8; text-align:left;">
-                <p>📝 未着手: <strong>${todo}</strong> 件</p>
-                <p>⏳ 進行中: <strong>${doing}</strong> 件</p>
-                <p>✅ 完了済: <strong>${done}</strong> 件</p>
-            </div>`;
-    }
+
+    // 2. ステータス配分グラフ（バー）の更新
+    await updateStatusDistribution();
 }
 
 /**
@@ -43,7 +49,8 @@ async function updateStatusDistribution() {
 
         if (result.success) {
             const data = result.data;
-            const container = document.querySelector('.placeholder-box');
+            // index.php で定義した ID または placeholder-box を取得
+            const container = document.getElementById('status-distribution-container') || document.querySelector('.placeholder-box');
             if (!container) return;
 
             const total = data.total;
@@ -78,11 +85,3 @@ async function updateStatusDistribution() {
         console.error("統計データ取得エラー:", e);
     }
 }
-
-// 既存の updateDashboard 関数内から呼び出すようにします
-// (既存のコードを上書き、または追加してください)
-const originalUpdateDashboard = updateDashboard;
-updateDashboard = function() {
-    originalUpdateDashboard();
-    updateStatusDistribution();
-};
