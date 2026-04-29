@@ -1,8 +1,5 @@
 <?php
 require 'db.php';
-// エラー表示用
-// ini_set('display_errors', 1);
-// error_reporting(E_ALL);
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -86,12 +83,23 @@ require 'db.php';
                 <div class="dashboard-grid">
                     <div class="stat-card">
                         <div class="stat-header"><h3>総タスク数</h3></div>
-                        <div class="stat-body"><div id="total-count" class="stat-value">0</div></div>
+                        <div class="stat-body">
+                            <div id="total-count" class="stat-value">0</div>
+                        </div>
                     </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header"><h3>作業密度 (平均)</h3></div>
+                        <div class="stat-body">
+                            <div id="average-task-time" class="stat-value" style="font-size: 1.8rem;">0s</div>
+                        </div>
+                    </div>
+
                     <div class="stat-card">
                         <div class="stat-header"><h3>残タスク</h3></div>
                         <div class="stat-body"><div id="remaining-count" class="stat-value">0</div></div>
                     </div>
+
                     <div class="stat-card">
                         <div class="stat-header"><h3>完了率</h3>
                             <div class="custom-select-wrapper">
@@ -104,6 +112,7 @@ require 'db.php';
                         </div>
                         <div class="stat-body"><div id="progress-rate" class="stat-value">0%</div></div>
                     </div>
+
                     <div class="stat-card">
                         <div class="stat-header"><h3>期限切れ</h3></div>
                         <div class="stat-body"><div id="overdue-count" class="stat-value">0</div></div>
@@ -145,13 +154,6 @@ require 'db.php';
                 <div class="glass-modal" style="max-width: 1000px; margin: 0 auto; padding: 25px;"><div style="overflow-x: auto;"><table style="width: 100%; color: #f1f5f9; border-collapse: collapse;"><tbody id="recurringTableBody"></tbody></table></div></div>
             </div>
         </main>
-    </div>
-
-    <div id="recurringModal" class="modal-overlay">
-        <div class="glass-modal" style="max-width: 500px;">
-            <div class="modal-header"><h2>定期タスク登録</h2><button type="button" class="close-modal-btn" onclick="closeRecurringModal()">&times;</button></div>
-            <div class="modal-body"><input type="hidden" id="recTaskId"><input type="text" id="recTaskInput" class="glass-input-field" placeholder="タイトル"><textarea id="recTaskDetail" class="glass-input-field" rows="3"></textarea><textarea id="recTaskNotes" class="glass-input-field" rows="2"></textarea><button type="button" onclick="saveRecurringTask()" class="glass-submit-btn">保存する</button></div>
-        </div>
     </div>
 
     <div id="taskModal" class="modal-overlay">

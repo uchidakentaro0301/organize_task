@@ -1,9 +1,9 @@
 /**
- * dashboard.js - 集計・分析ロジック
+ * dashboard.js - 集計・分析ロジック (作業密度を総タスク数カード内に統合)
  */
 
 /**
- * ダッシュボード全体の数値を更新
+ * ダッシュボード全体の更新
  */
 async function updateDashboard() {
     if (typeof tasks === 'undefined' || !tasks) return;
@@ -11,13 +11,17 @@ async function updateDashboard() {
     // 1. 各種数値の計算
     const total = tasks.length;
     const remaining = tasks.filter(t => t.status !== 'done').length;
-    const doneCount = tasks.filter(t => t.status === 'done').length;
+    const doneTasks = tasks.filter(t => t.status === 'done');
+    const doneCount = doneTasks.length;
     const rate = total > 0 ? Math.round((doneCount / total) * 100) : 0;
     
     const todayStr = new Date().toISOString().split('T')[0];
     const overdue = tasks.filter(t => t.status !== 'done' && t.endDate && t.endDate < todayStr).length;
 
-    // 2. 数値統計の反映
+    // 2. 作業密度の計算 (時間・分・秒表示)
+    updateAverageWorkDensity(doneTasks);
+
+    // 3. 数値統計の反映
     const statsMap = {
         'total-count': total,
         'remaining-count': remaining,
@@ -35,13 +39,45 @@ async function updateDashboard() {
         }
     }
 
-    // 3. 分析データの更新
+    // 4. 分析データの更新
     await updateStatusDistribution();
     updateTimeRanking();
 }
 
 /**
- * ステータス配分グラフの描画
+ * 作業密度（完了タスク1件あたりの平均時間）を計算
+ */
+function updateAverageWorkDensity(doneTasks) {
+    const avgDisplay = document.getElementById('average-task-time');
+    if (!avgDisplay) return;
+
+    // 完了済みかつ計測時間があるタスクを抽出
+    const timedDoneTasks = doneTasks.filter(t => (t.totalTime || 0) > 0);
+    
+    if (timedDoneTasks.length === 0) {
+        avgDisplay.innerText = "0s";
+        return;
+    }
+
+    // 平均秒数を算出
+    const totalSeconds = timedDoneTasks.reduce((sum, t) => sum + parseInt(t.totalTime), 0);
+    const avgSeconds = Math.floor(totalSeconds / timedDoneTasks.length);
+
+    // 時間・分・秒に分解
+    const h = Math.floor(avgSeconds / 3600);
+    const m = Math.floor((avgSeconds % 3600) / 60);
+    const s = avgSeconds % 60;
+
+    let timeParts = [];
+    if (h > 0) timeParts.push(`${h}h`);
+    if (m > 0) timeParts.push(`${m}m`);
+    if (s > 0 || timeParts.length === 0) timeParts.push(`${s}s`);
+    
+    avgDisplay.innerText = timeParts.join(' ');
+}
+
+/**
+ * ステータス配分状況の描画
  */
 async function updateStatusDistribution() {
     const container = document.getElementById('status-distribution-container');
@@ -80,11 +116,11 @@ async function updateStatusDistribution() {
             html += '</div>';
             container.innerHTML = html;
         }
-    } catch (e) { console.error("統計データ取得エラー:", e); }
+    } catch (e) { console.error("統計取得エラー:", e); }
 }
 
 /**
- * 時間消費ランキング (テキスト表示のみ・コンパクト版)
+ * 時間消費ランキング (TOP 5)
  */
 function updateTimeRanking() {
     const container = document.getElementById('time-ranking-container');
@@ -132,12 +168,12 @@ function updateTimeRanking() {
     container.innerHTML = html;
 }
 
-// 共通エスケープ関数
-if (typeof escapeHTML !== 'function') {
-    function escapeHTML(str) {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
+/**
+ * 共通エスケープ関数
+ */
+function escapeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }
