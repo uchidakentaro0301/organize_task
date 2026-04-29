@@ -1,5 +1,8 @@
 <?php
 require 'db.php';
+// エラー表示用
+// ini_set('display_errors', 1);
+// error_reporting(E_ALL);
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -106,14 +109,18 @@ require 'db.php';
                         <div class="stat-body"><div id="overdue-count" class="stat-value">0</div></div>
                     </div>
 
-                    <div class="stat-card wide">
-                        <div class="stat-header"><h3>ステータス配分状況</h3></div>
-                        <div class="stat-body"><div id="status-distribution-container" class="placeholder-box"></div></div>
+                    <div class="stat-card">
+                        <div class="stat-header"><h3>時間消費分析</h3></div>
+                        <div class="stat-body" style="padding: 10px;">
+                            <div id="time-ranking-container" class="placeholder-box"></div>
+                        </div>
                     </div>
 
                     <div class="stat-card wide">
-                        <div class="stat-header"><h3>時間消費分析</h3></div>
-                        <div class="stat-body"><div id="time-ranking-container" class="placeholder-box"></div></div>
+                        <div class="stat-header"><h3>ステータス配分状況</h3></div>
+                        <div class="stat-body">
+                            <div id="status-distribution-container" class="placeholder-box"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -143,13 +150,13 @@ require 'db.php';
     <div id="recurringModal" class="modal-overlay">
         <div class="glass-modal" style="max-width: 500px;">
             <div class="modal-header"><h2>定期タスク登録</h2><button type="button" class="close-modal-btn" onclick="closeRecurringModal()">&times;</button></div>
-            <div class="modal-body"><input type="hidden" id="recTaskId"><input type="text" id="recTaskInput" class="glass-input-field" placeholder="タイトル"><textarea id="recTaskDetail" class="glass-input-field" rows="3" placeholder="詳細"></textarea><textarea id="recTaskNotes" class="glass-input-field" rows="2" placeholder="備考"></textarea><button type="button" onclick="saveRecurringTask()" class="glass-submit-btn">保存する</button></div>
+            <div class="modal-body"><input type="hidden" id="recTaskId"><input type="text" id="recTaskInput" class="glass-input-field" placeholder="タイトル"><textarea id="recTaskDetail" class="glass-input-field" rows="3"></textarea><textarea id="recTaskNotes" class="glass-input-field" rows="2"></textarea><button type="button" onclick="saveRecurringTask()" class="glass-submit-btn">保存する</button></div>
         </div>
     </div>
 
     <div id="taskModal" class="modal-overlay">
         <div class="glass-modal">
-            <div class="modal-header"><h2 id="modalTitle">Task Editor</h2><button type="button" class="close-modal-btn" onclick="closeTaskModal()">&times;</button></div>
+            <div class="modal-header"><h2>Task Editor</h2><button type="button" class="close-modal-btn" onclick="closeTaskModal()">&times;</button></div>
             <div class="modal-body">
                 <input type="hidden" id="modalTaskId">
                 <div id="modalBacklogArea" class="modal-section" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;"><div class="modal-date-row" style="display: flex; gap: 10px;"><select id="modalBacklogType" class="glass-input-field"></select><select id="modalBacklogAssignee" class="glass-input-field"></select></div></div>

@@ -1,5 +1,5 @@
 /**
- * dashboard.js - 集計・分析ロジック (時間テキスト表示版)
+ * dashboard.js - 集計・分析ロジック
  */
 
 /**
@@ -36,8 +36,8 @@ async function updateDashboard() {
     }
 
     // 3. 分析データの更新
-    await updateStatusDistribution(); // ステータス配分
-    updateTimeRanking();              // 時間消費分析 (テキスト版)
+    await updateStatusDistribution();
+    updateTimeRanking();
 }
 
 /**
@@ -66,7 +66,7 @@ async function updateStatusDistribution() {
             stats.forEach(s => {
                 const percent = getPercent(s.count);
                 html += `
-                    <div style="margin-bottom: 15px;">
+                    <div style="margin-bottom: 12px;">
                         <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px; color: #475569;">
                             <span><strong>${s.label}</strong></span>
                             <span>${s.count} 件 (${percent}%)</span>
@@ -84,48 +84,44 @@ async function updateStatusDistribution() {
 }
 
 /**
- * 時間消費TOP5ランキングの描画 (テキスト表示のみ)
+ * 時間消費ランキング (テキスト表示のみ・コンパクト版)
  */
 function updateTimeRanking() {
     const container = document.getElementById('time-ranking-container');
     if (!container) return;
 
-    // totalTime（秒）を保持しているタスクを降順でソート
     const rankedTasks = tasks
         .filter(t => (t.totalTime || 0) > 0)
         .sort((a, b) => b.totalTime - a.totalTime)
         .slice(0, 5);
 
     if (rankedTasks.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8; font-size:0.85rem;">計測された時間はまだありません</div>';
+        container.innerHTML = '<div style="text-align:center; padding:15px; color:#94a3b8; font-size:0.75rem;">データなし</div>';
         return;
     }
 
-    let html = `<div style="display: flex; flex-direction: column; gap: 12px; padding: 10px;">
-                <p style="font-size:0.8rem; color:#64748b; margin-bottom:5px; border-bottom:1px solid #eee; padding-bottom:5px;">消費時間の多い上位5タスク</p>`;
+    let html = `<div style="display: flex; flex-direction: column; gap: 8px;">`;
 
     rankedTasks.forEach((t, index) => {
-        // 秒を時間・分・秒に変換
         const s = parseInt(t.totalTime);
         const h = Math.floor(s / 3600);
         const m = Math.floor((s % 3600) / 60);
         const sec = s % 60;
         
-        // 表示用文字列の組み立て
         let timeParts = [];
-        if (h > 0) timeParts.push(`${h}時間`);
-        if (m > 0) timeParts.push(`${m}分`);
-        if (sec > 0 || timeParts.length === 0) timeParts.push(`${sec}秒`);
+        if (h > 0) timeParts.push(`${h}h`);
+        if (m > 0) timeParts.push(`${m}m`);
+        if (sec > 0 || timeParts.length === 0) timeParts.push(`${sec}s`);
         
         const timeStr = timeParts.join('');
 
         html += `
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; color: #334155; padding: 4px 0;">
-                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;">
-                    <span style="color: #6366f1; font-weight: bold; margin-right: 8px;">#${index + 1}</span>
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.03); padding-bottom: 4px;">
+                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%; color: #475569;">
+                    <span style="color: #6366f1; font-weight: bold; margin-right: 4px;">${index + 1}位</span>
                     <span>${escapeHTML(t.text)}</span>
                 </div>
-                <div style="font-weight: bold; color: #1e1b4b; background: #f1f5f9; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem;">
+                <div style="font-weight: bold; color: #1e1b4b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">
                     ${timeStr}
                 </div>
             </div>
