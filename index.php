@@ -162,6 +162,24 @@ require 'db.php';
                 </div>
             </div>
 
+            <div id="dashboardView" class="view-section" style="display:none;">
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-header"><h3>総タスク数</h3></div>
+                        <div class="stat-body"><div class="stat-value" id="totalTasks">0</div></div>
+                    </div>
+
+                    <div class="stat-card wide">
+                        <div class="stat-header"><h3>ステータス配分状況</h3></div>
+                        <div class="stat-body">
+                            <div class="placeholder-box">
+                                </div>
+                        </div>
+                    </div>
+
+                    </div>
+            </div>
+
             <div id="backlogView" class="view">
                 <div class="dashboard-header"><h1>Direct Registration</h1></div>
                 <div class="glass-modal" style="max-width: 600px; margin: 0 auto; padding: 30px;">

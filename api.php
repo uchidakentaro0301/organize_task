@@ -137,4 +137,28 @@ switch ($action) {
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;
+
+        case 'get_status_stats':
+            $user_id = $_SESSION['user_id'];
+            // ステータスごとの件数を集計
+            $sql = "SELECT status, COUNT(*) as count FROM tasks WHERE user_id = ? GROUP BY status";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$user_id]);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+            // フロントエンドで扱いやすいように整形
+            $stats = [
+                'todo' => 0,
+                'doing' => 0,
+                'done' => 0,
+                'total' => 0
+            ];
+        
+            foreach ($results as $row) {
+                $stats[$row['status']] = (int)$row['count'];
+                $stats['total'] += (int)$row['count'];
+            }
+        
+            echo json_encode(['success' => true, 'data' => $stats]);
+            break;
 }
