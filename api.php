@@ -214,6 +214,56 @@ switch ($action) {
         echo json_encode(['success' => true, 'data' => $stats]);
         break;
 
+        case 'fetch_categories':
+            $stmt = $pdo->prepare("SELECT id, name FROM categories WHERE user_id = ? ORDER BY name ASC");
+            $stmt->execute([$user_id]);
+            echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+            break;
+    
+        case 'add_category':
+            $d = json_decode(file_get_contents('php://input'), true);
+            if (!empty($d['name'])) {
+                $stmt = $pdo->prepare("INSERT INTO categories (user_id, name) VALUES (?, ?)");
+                $stmt->execute([$user_id, $d['name']]);
+                echo json_encode(['success' => true]);
+            }
+            break;
+    
+        case 'fetch_tasks':
+            // category_id と category_name も取得するように修正
+            $sql = "SELECT t.*, c.name as categoryName 
+                    FROM tasks t 
+                    LEFT JOIN categories c ON t.category_id = c.id 
+                    WHERE t.user_id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$user_id]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            // JS側の期待するキー名（text, startDate等）にマッピング
+            $tasks = array_map(function($r) {
+                return [
+                    'id' => $r['id'], 'text' => $r['title'], 'detail' => $r['detail'],
+                    'status' => $r['status'], 'startDate' => $r['start_date'],
+                    'endDate' => $r['end_date'], 'categoryId' => $r['category_id'],
+                    'categoryName' => $r['categoryName'], 'totalTime' => $r['total_time']
+                ];
+            }, $rows);
+            echo json_encode($tasks);
+            break;
+    
+        case 'add_task':
+            $d = json_decode(file_get_contents('php://input'), true);
+            $stmt = $pdo->prepare("INSERT INTO tasks (user_id, title, detail, start_date, end_date, status, category_id) VALUES (?, ?, ?, ?, ?, 'todo', ?)");
+            $stmt->execute([$user_id, $d['title'], $d['detail'], $d['startDate'], $d['endDate'], $d['categoryId']]);
+            echo json_encode(['success' => true]);
+            break;
+    
+        case 'edit_task':
+            $d = json_decode(file_get_contents('php://input'), true);
+            $stmt = $pdo->prepare("UPDATE tasks SET title=?, detail=?, start_date=?, end_date=?, category_id=? WHERE id=? AND user_id=?");
+            $stmt->execute([$d['title'], $d['detail'], $d['startDate'], $d['endDate'], $d['categoryId'], $d['id'], $user_id]);
+            echo json_encode(['success' => true]);
+            break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;
