@@ -209,8 +209,17 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
             </div>
 
             <div id="recurringView" class="view">
-                <div class="dashboard-header"><h1>定期タスク管理</h1><button type="button" class="open-modal-btn" onclick="openRecurringModal()" style="font-size: 0.8rem; height: 38px;">＋ 新規定期タスク</button></div>
-                <div class="glass-modal" style="max-width: 1000px; margin: 0 auto; padding: 25px;"><div style="overflow-x: auto;"><table style="width: 100%; color: #f1f5f9; border-collapse: collapse;"><tbody id="recurringTableBody"></tbody></table></div></div>
+                <div class="dashboard-header">
+                    <h1>定期タスク管理</h1>
+                    <button type="button" class="open-modal-btn" onclick="openRecurringModal()" style="font-size: 0.8rem; height: 38px;">＋ 新規定期タスク</button>
+                </div>
+                <div class="glass-modal" style="max-width: 1000px; margin: 0 auto; padding: 25px;">
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; color: #f1f5f9; border-collapse: collapse;">
+                            <tbody id="recurringTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -223,14 +232,12 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalTaskId">
-                
                 <div class="modal-section">
                     <label>Category (必須)</label>
                     <select id="taskCategory" class="glass-input-field">
                         <option value="">-- カテゴリーを選択 --</option>
                     </select>
                 </div>
-
                 <div id="modalBacklogArea" class="modal-section" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display:none;">
                     <div class="modal-date-row" style="display: flex; gap: 10px;">
                         <select id="modalBacklogType" class="glass-input-field"></select>
@@ -273,6 +280,33 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                 </div>
                 <div class="modal-footer">
                     <button type="button" onclick="saveCategory()" class="glass-submit-btn" style="background: #10b981;">Save Category</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="recurringModal" class="modal-overlay">
+        <div class="glass-modal">
+            <div class="modal-header">
+                <h2 id="recModalTitle">定期タスク登録</h2>
+                <button type="button" class="close-modal-btn" onclick="closeRecurringModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="recTaskId">
+                <div class="modal-section">
+                    <label>タイトル</label>
+                    <input type="text" id="recTaskInput" class="glass-input-field">
+                </div>
+                <div class="modal-section">
+                    <label>詳細内容</label>
+                    <textarea id="recTaskDetail" rows="3" class="glass-input-field"></textarea>
+                </div>
+                <div class="modal-section">
+                    <label>備考 (URLなど)</label>
+                    <textarea id="recTaskNotes" rows="2" class="glass-input-field"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="saveRecurringTask()" class="glass-submit-btn">保存する</button>
                 </div>
             </div>
         </div>

@@ -175,9 +175,11 @@ switch ($action) {
 
     case 'delete_recurring_task':
         $d = json_decode(file_get_contents('php://input'), true);
-        $stmt = $pdo->prepare("DELETE FROM recurring_tasks WHERE id=? AND user_id=?");
-        $stmt->execute([$d['id'], $user_id]);
-        echo json_encode(['success' => true]);
+        if (isset($d['id'])) {
+            $stmt = $pdo->prepare("DELETE FROM recurring_tasks WHERE id = ? AND user_id = ?");
+            $stmt->execute([$d['id'], $user_id]);
+            echo json_encode(['success' => true]);
+        }
         break;
 
     // --- CyTechユーザー管理 ---
