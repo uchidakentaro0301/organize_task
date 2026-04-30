@@ -1,5 +1,7 @@
 <?php
-require 'db.php';
+require 'db.php'; 
+// セッションが開始されていない場合は開始
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -8,11 +10,44 @@ require 'db.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🚙☁ 👀 My little Backlog</title>
     <link rel="icon" href="data:,">
-    <?php if (!isset($_SESSION['user_id'])): ?>
-        <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <?php endif; ?>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/board.css">
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <script>
+    function handleCredentialResponse(response) {
+        console.log("Google認証成功、サーバーへ送信中...");
+        fetch('api.php?action=login_google', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: response.credential })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.json();
+        })
+        .then(data => {
+            if (data.success) {
+                console.log("ログイン成功、画面をリロードします。");
+                window.location.reload(); // リロードすることでPHP側のisset($_SESSION['user_id'])が真になり、ボードが表示されます
+            } else {
+                alert('ログインに失敗しました: ' + (data.message || '不明なエラー'));
+            }
+        })
+        .catch(err => {
+            console.error('Login error:', err);
+            alert('サーバーとの通信に失敗しました。');
+        });
+    }
+
+    // サイドバー切り替え等の基本関数も先行定義
+    function toggleSidebar() { document.getElementById('sidebar')?.classList.toggle('collapsed'); }
+    function toggleSlackSettings() {
+        const content = document.getElementById('slackContent');
+        if (content) content.style.display = (content.style.display === 'none' || content.style.display === '') ? 'block' : 'none';
+    }
+    </script>
 </head>
 <body>
 
@@ -28,7 +63,11 @@ require 'db.php';
                 <p>Smart Task Management</p>
             </div>
             <div class="login-body">
-                <div id="g_id_onload" data-client_id="561494858012-hop2mqad9hts9ur2neqtnaei7uisjb7u.apps.googleusercontent.com" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
+                <div id="g_id_onload"
+                     data-client_id="561494858012-hop2mqad9hts9ur2neqtnaei7uisjb7u.apps.googleusercontent.com"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
                 <div class="google-btn-wrapper">
                     <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-size="large" data-text="signin_with"></div>
                 </div>
@@ -67,7 +106,7 @@ require 'db.php';
                 <div class="top-action-area">
                     <button type="button" class="open-modal-btn" onclick="openTaskModal()"><span class="icon">＋</span> 新しいタスクを追加</button>
                     <div style="display: flex; gap: 2px;">
-                        <button type="button" class="template-btn" onclick="openTaskModal(true)" style="border-radius: 14px 0 0 14px;"><span class="icon">📋</span> テンプレートから作成</button>
+                        <button type="button" class="template-btn" onclick="openTaskModal(true)" style="border-radius: 14px 0 0 14px;"><span class="icon">📋</span> テンプレート</button>
                         <button type="button" class="template-btn" onclick="openTemplateCreateMode()" style="border-radius: 0 14px 14px 0; padding: 0 15px; background: #6366f1;"><span class="icon">＋</span></button>
                     </div>
                 </div>
@@ -83,25 +122,19 @@ require 'db.php';
                 <div class="dashboard-grid">
                     <div class="stat-card">
                         <div class="stat-header"><h3>総タスク数</h3></div>
-                        <div class="stat-body">
-                            <div id="total-count" class="stat-value">0</div>
-                        </div>
+                        <div class="stat-body"><div id="total-count" class="stat-value">0</div></div>
                     </div>
-
                     <div class="stat-card">
                         <div class="stat-header"><h3>作業密度 (平均)</h3></div>
-                        <div class="stat-body">
-                            <div id="average-task-time" class="stat-value" style="font-size: 1.8rem;">0s</div>
-                        </div>
+                        <div class="stat-body"><div id="average-task-time" class="stat-value" style="font-size: 1.8rem;">0s</div></div>
                     </div>
-
                     <div class="stat-card">
                         <div class="stat-header"><h3>残タスク</h3></div>
                         <div class="stat-body"><div id="remaining-count" class="stat-value">0</div></div>
                     </div>
-
                     <div class="stat-card">
-                        <div class="stat-header"><h3>完了率</h3>
+                        <div class="stat-header">
+                            <h3>完了率</h3>
                             <div class="custom-select-wrapper">
                                 <select id="period-selector" onchange="updateDashboard()">
                                     <option value="all">全期間</option>
@@ -112,19 +145,16 @@ require 'db.php';
                         </div>
                         <div class="stat-body"><div id="progress-rate" class="stat-value">0%</div></div>
                     </div>
-
                     <div class="stat-card">
                         <div class="stat-header"><h3>期限切れ</h3></div>
                         <div class="stat-body"><div id="overdue-count" class="stat-value">0</div></div>
                     </div>
-
                     <div class="stat-card">
                         <div class="stat-header"><h3>時間消費分析</h3></div>
                         <div class="stat-body" style="padding: 10px;">
                             <div id="time-ranking-container" class="placeholder-box"></div>
                         </div>
                     </div>
-
                     <div class="stat-card wide">
                         <div class="stat-header"><h3>ステータス配分状況</h3></div>
                         <div class="stat-body">
@@ -170,7 +200,18 @@ require 'db.php';
         </div>
     </div>
 
-    <script src="js/script.js"></script><script src="js/board.js"></script><script src="js/dashboard.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/dashboard.js"></script>
 <?php endif; ?>
+
+<svg style="display: none;">
+  <defs>
+    <filter id="glass-distortion">
+      <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="10" />
+    </filter>
+  </defs>
+</svg>
 </body>
 </html>
