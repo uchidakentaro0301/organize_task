@@ -92,9 +92,44 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
             <div id="boardView" class="view active">
                 <div class="top-action-area">
                     <button type="button" class="open-modal-btn" onclick="openTaskModal()"><span class="icon">＋</span> 新しいタスクを追加</button>
-                    <div style="display: flex; gap: 2px;">
+                    
+                    <div style="display: flex; gap: 2px; margin-left: 10px;">
+                        <button type="button" class="template-btn" onclick="openCategoryModal()" style="border-radius: 14px 0 0 14px; background: #10b981;">
+                            <span class="icon">🏷️</span> カテゴリー
+                        </button>
+                        <button type="button" class="template-btn" onclick="openCategoryModal()" style="border-radius: 0 14px 14px 0; padding: 0 15px; background: #059669;">
+                            <span class="icon">＋</span>
+                        </button>
+                    </div>
+
+                    <div style="display: flex; gap: 2px; margin-left: 10px;">
                         <button type="button" class="template-btn" onclick="openTaskModal(true)" style="border-radius: 14px 0 0 14px;"><span class="icon">📋</span> テンプレート</button>
                         <button type="button" class="template-btn" onclick="openTemplateCreateMode()" style="border-radius: 0 14px 14px 0; padding: 0 15px; background: #6366f1;"><span class="icon">＋</span></button>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <label>Category (必須)</label>
+                    <select id="taskCategory" class="glass-input-field">
+                        <option value="">-- カテゴリーを選択 --</option>
+                    </select>
+                </div>
+
+                <div id="categoryModal" class="modal-overlay">
+                    <div class="glass-modal">
+                        <div class="modal-header">
+                            <h2>Add New Category</h2>
+                            <button type="button" class="close-modal-btn" onclick="closeCategoryModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="modal-section">
+                                <label>Category Name</label>
+                                <input type="text" id="categoryInput" class="glass-input-field" placeholder="カテゴリー名を入力...">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" onclick="saveCategory()" class="glass-submit-btn" style="background: #10b981;">Save Category</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="board">

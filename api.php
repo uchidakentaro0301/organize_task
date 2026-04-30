@@ -5,6 +5,7 @@ header('Content-Type: application/json');
 $action = $_GET['action'] ?? '';
 $user_id = $_SESSION['user_id'] ?? null;
 
+// Backlog連携用設定
 $space_id = 'ct-academy'; 
 $api_key = '4Be3aRFWc2Wxax0ewCSXZjsNiWBQ8vqyil3POfnS79W2xKSzjwdjcmJWN6so6WIO';
 $project_id = 699087;
@@ -12,11 +13,6 @@ $project_id = 699087;
 if (!$user_id && $action !== 'login_google') {
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit;
-}
-
-function backlog_payload_id(array $d, $key1, $key2): ?int {
-    $val = $d[$key1] ?? $d[$key2] ?? null;
-    return ($val === null || $val === '') ? null : (int)$val;
 }
 
 switch ($action) {
@@ -38,28 +34,55 @@ switch ($action) {
         }
         break;
 
+    // --- カテゴリー管理 ---
+    case 'fetch_categories':
+        $stmt = $pdo->prepare("SELECT id, name FROM categories WHERE user_id = ? ORDER BY name ASC");
+        $stmt->execute([$user_id]);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+        break;
+
+    case 'add_category':
+        $d = json_decode(file_get_contents('php://input'), true);
+        if (!empty($d['name'])) {
+            $stmt = $pdo->prepare("INSERT INTO categories (user_id, name) VALUES (?, ?)");
+            $stmt->execute([$user_id, $d['name']]);
+            echo json_encode(['success' => true]);
+        }
+        break;
+
+    // --- タスク管理 ---
     case 'fetch_tasks':
-        // total_time(秒数)を必ず取得するように修正
-        $sql = "SELECT id, title as text, detail, status, start_date as startDate, 
-                end_date as endDate, backlog_assignee_id as backlogAssigneeId,
-                backlog_issue_type_id as backlogIssueTypeId, total_time as totalTime
-                FROM tasks WHERE user_id = ?";
+        $sql = "SELECT t.*, c.name as categoryName 
+                FROM tasks t 
+                LEFT JOIN categories c ON t.category_id = c.id 
+                WHERE t.user_id = ?";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$user_id]);
-        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC) ?: []);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $tasks = array_map(function($r) {
+            return [
+                'id' => $r['id'], 'text' => $r['title'], 'detail' => $r['detail'],
+                'status' => $r['status'], 'startDate' => $r['start_date'],
+                'endDate' => $r['end_date'], 'categoryId' => $r['category_id'],
+                'categoryName' => $r['categoryName'], 'totalTime' => $r['total_time'],
+                'backlogAssigneeId' => $r['backlog_assignee_id'],
+                'backlogIssueTypeId' => $r['backlog_issue_type_id']
+            ];
+        }, $rows);
+        echo json_encode($tasks);
         break;
 
     case 'add_task':
         $d = json_decode(file_get_contents('php://input'), true);
-        $stmt = $pdo->prepare("INSERT INTO tasks (user_id, title, detail, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, 'todo')");
-        $stmt->execute([$user_id, $d['title'], $d['detail'], $d['startDate'], $d['endDate']]);
+        $stmt = $pdo->prepare("INSERT INTO tasks (user_id, title, detail, start_date, end_date, status, category_id) VALUES (?, ?, ?, ?, ?, 'todo', ?)");
+        $stmt->execute([$user_id, $d['title'], $d['detail'], $d['startDate'], $d['endDate'], $d['categoryId']]);
         echo json_encode(['success' => true]);
         break;
 
     case 'edit_task':
         $d = json_decode(file_get_contents('php://input'), true);
-        $stmt = $pdo->prepare("UPDATE tasks SET title=?, detail=?, start_date=?, end_date=?, backlog_assignee_id=?, backlog_issue_type_id=? WHERE id=? AND user_id=?");
-        $stmt->execute([$d['title'], $d['detail'], $d['startDate'], $d['endDate'], $d['backlogAssigneeId'], $d['backlogIssueTypeId'], $d['id'], $user_id]);
+        $stmt = $pdo->prepare("UPDATE tasks SET title=?, detail=?, start_date=?, end_date=?, category_id=?, backlog_assignee_id=?, backlog_issue_type_id=? WHERE id=? AND user_id=?");
+        $stmt->execute([$d['title'], $d['detail'], $d['startDate'], $d['endDate'], $d['categoryId'], $d['backlogAssigneeId'] ?? null, $d['backlogIssueTypeId'] ?? null, $d['id'], $user_id]);
         echo json_encode(['success' => true]);
         break;
 
@@ -84,6 +107,28 @@ switch ($action) {
         echo json_encode(['success' => true]);
         break;
 
+    // --- ダッシュボード統計 ---
+    case 'get_status_stats':
+        $sql = "SELECT status, COUNT(*) as count, SUM(total_time) as total_time FROM tasks WHERE user_id = ? GROUP BY status";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$user_id]);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $stats = [
+            'todo' => 0, 'doing' => 0, 'done' => 0, 'total' => 0,
+            'todo_time' => 0, 'doing_time' => 0, 'done_time' => 0
+        ];
+        
+        foreach ($results as $row) {
+            $status = $row['status'];
+            $stats[$status] = (int)$row['count'];
+            $stats[$status . '_time'] = (int)($row['total_time'] ?? 0);
+            $stats['total'] += (int)$row['count'];
+        }
+        echo json_encode(['success' => true, 'data' => $stats]);
+        break;
+
+    // --- Backlog連携 ---
     case 'fetch_backlog_users':
         $url = "https://{$space_id}.backlog.com/api/v2/projects/{$project_id}/users?apiKey=".urlencode($api_key);
         echo @file_get_contents($url) ?: json_encode([]);
@@ -98,7 +143,7 @@ switch ($action) {
         $d = json_decode(file_get_contents('php://input'), true);
         $url = "https://{$space_id}.backlog.com/api/v2/issues?apiKey=".urlencode($api_key);
         $post = ['projectId'=>$project_id, 'summary'=>$d['title'], 'description'=>$d['detail'], 'startDate'=>$d['startDate'], 'dueDate'=>$d['endDate'], 'issueTypeId'=>$d['issueTypeId'], 'priorityId'=>3];
-        if($d['assigneeId']) $post['assigneeId'] = $d['assigneeId'];
+        if(!empty($d['assigneeId'])) $post['assigneeId'] = $d['assigneeId'];
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -107,6 +152,7 @@ switch ($action) {
         curl_close($ch);
         break;
 
+    // --- 定期タスク管理 ---
     case 'fetch_recurring_tasks':
         $stmt = $pdo->prepare("SELECT id, title, detail, notes FROM recurring_tasks WHERE user_id = ? ORDER BY id DESC");
         $stmt->execute([$user_id]);
@@ -134,6 +180,7 @@ switch ($action) {
         echo json_encode(['success' => true]);
         break;
 
+    // --- CyTechユーザー管理 ---
     case 'fetch_cytech_users':
         $stmt = $pdo->prepare("SELECT * FROM cytech_users WHERE user_id = ? ORDER BY id DESC");
         $stmt->execute([$user_id]);
@@ -168,127 +215,7 @@ switch ($action) {
         echo json_encode(['success' => true]);
         break;
 
-    case 'get_status_stats':
-        $user_id = $_SESSION['user_id'];
-        // ステータスごとの件数と合計時間を集計
-        $sql = "SELECT status, COUNT(*) as count, SUM(total_time) as total_time FROM tasks WHERE user_id = ? GROUP BY status";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$user_id]);
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // フロントエンドで扱いやすいように初期化
-        $stats = [
-            'todo' => 0, 'doing' => 0, 'done' => 0, 'total' => 0,
-            'todo_time' => 0, 'doing_time' => 0, 'done_time' => 0
-        ];
-        
-        foreach ($results as $row) {
-            $status = $row['status'];
-            $stats[$status] = (int)$row['count'];
-            $stats[$status . '_time'] = (int)($row['total_time'] ?? 0);
-            $stats['total'] += (int)$row['count'];
-        }
-        
-        echo json_encode(['success' => true, 'data' => $stats]);
-        break;
-
-    case 'get_status_stats':
-         $user_id = $_SESSION['user_id'];
-         $sql = "SELECT status, COUNT(*) as count, SUM(total_time) as total_time FROM tasks WHERE user_id = ? GROUP BY status";
-         $stmt = $pdo->prepare($sql);
-         $stmt->execute([$user_id]);
-         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-        $stats = [
-             'todo' => 0, 'doing' => 0, 'done' => 0, 'total' => 0,
-            'todo_time' => 0, 'doing_time' => 0, 'done_time' => 0
-         ];
-            
-        foreach ($results as $row) {
-            $status = $row['status'];
-            $stats[$status] = (int)$row['count'];
-            $stats[$status . '_time'] = (int)($row['total_time'] ?? 0);
-            $stats['total'] += (int)$row['count'];
-        }
-            
-        echo json_encode(['success' => true, 'data' => $stats]);
-        break;
-
-        case 'fetch_categories':
-            $stmt = $pdo->prepare("SELECT id, name FROM categories WHERE user_id = ? ORDER BY name ASC");
-            $stmt->execute([$user_id]);
-            echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
-            break;
-    
-        case 'add_category':
-            $d = json_decode(file_get_contents('php://input'), true);
-            if (!empty($d['name'])) {
-                $stmt = $pdo->prepare("INSERT INTO categories (user_id, name) VALUES (?, ?)");
-                $stmt->execute([$user_id, $d['name']]);
-                echo json_encode(['success' => true]);
-            }
-            break;
-    
-        case 'fetch_tasks':
-            // category_id と category_name も取得するように修正
-            $sql = "SELECT t.*, c.name as categoryName 
-                    FROM tasks t 
-                    LEFT JOIN categories c ON t.category_id = c.id 
-                    WHERE t.user_id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$user_id]);
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            // JS側の期待するキー名（text, startDate等）にマッピング
-            $tasks = array_map(function($r) {
-                return [
-                    'id' => $r['id'], 'text' => $r['title'], 'detail' => $r['detail'],
-                    'status' => $r['status'], 'startDate' => $r['start_date'],
-                    'endDate' => $r['end_date'], 'categoryId' => $r['category_id'],
-                    'categoryName' => $r['categoryName'], 'totalTime' => $r['total_time']
-                ];
-            }, $rows);
-            echo json_encode($tasks);
-            break;
-    
-        case 'add_task':
-            $d = json_decode(file_get_contents('php://input'), true);
-            $stmt = $pdo->prepare("INSERT INTO tasks (user_id, title, detail, start_date, end_date, status, category_id) VALUES (?, ?, ?, ?, ?, 'todo', ?)");
-            $stmt->execute([$user_id, $d['title'], $d['detail'], $d['startDate'], $d['endDate'], $d['categoryId']]);
-            echo json_encode(['success' => true]);
-            break;
-    
-        case 'edit_task':
-            $d = json_decode(file_get_contents('php://input'), true);
-            $stmt = $pdo->prepare("UPDATE tasks SET title=?, detail=?, start_date=?, end_date=?, category_id=? WHERE id=? AND user_id=?");
-            $stmt->execute([$d['title'], $d['detail'], $d['startDate'], $d['endDate'], $d['categoryId'], $d['id'], $user_id]);
-            echo json_encode(['success' => true]);
-            break;
-
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;
-
-        case 'get_status_stats':
-            $user_id = $_SESSION['user_id'];
-            // ステータスごとの件数を集計
-            $sql = "SELECT status, COUNT(*) as count FROM tasks WHERE user_id = ? GROUP BY status";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$user_id]);
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-            // フロントエンドで扱いやすいように整形
-            $stats = [
-                'todo' => 0,
-                'doing' => 0,
-                'done' => 0,
-                'total' => 0
-            ];
-        
-            foreach ($results as $row) {
-                $stats[$row['status']] = (int)$row['count'];
-                $stats['total'] += (int)$row['count'];
-            }
-        
-            echo json_encode(['success' => true, 'data' => $stats]);
-            break;
 }
