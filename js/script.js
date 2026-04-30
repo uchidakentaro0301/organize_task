@@ -66,13 +66,16 @@ function showView(viewName) {
   // 各ビューに応じた初期化処理
   switch (viewName) {
       case 'board':
-          if (typeof loadTasks === 'function') loadTasks();
+          if (typeof loadTasksFromServer === 'function') loadTasksFromServer();
           break;
       case 'dashboard':
-          if (typeof initDashboard === 'function') initDashboard();
+          if (typeof updateDashboard === 'function') updateDashboard();
           break;
       case 'cytech_users':
           if (typeof loadCyTechUsers === 'function') loadCyTechUsers();
+          break;
+      case 'recurring':
+          if (typeof loadRecurringTasks === 'function') loadRecurringTasks();
           break;
       case 'free_book':
           // メモ帳のデータをロード
@@ -87,7 +90,6 @@ function showView(viewName) {
 * 初期表示
 */
 document.addEventListener('DOMContentLoaded', () => {
-  // URLのハッシュ等で初期表示を変える場合はここに記述
   // デフォルトはボードを表示
   showView('board');
 });
