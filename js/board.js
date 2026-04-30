@@ -1,6 +1,3 @@
-/**
- * js/board.js - カテゴリー機能・タイマー・PiP統合版
- */
 let activeTimers = {};
 let pipVideo = null;
 let pipCanvas = null;
@@ -137,12 +134,10 @@ async function addTask() {
 
     // 編集時はBacklog連携用のIDも取得
     if (taskId) {
-        if (document.getElementById('modalBacklogAssignee')) {
-            data.backlogAssigneeId = document.getElementById('modalBacklogAssignee').value;
-        }
-        if (document.getElementById('modalBacklogType')) {
-            data.backlogIssueTypeId = document.getElementById('modalBacklogType').value;
-        }
+        const assigneeEl = document.getElementById('modalBacklogAssignee');
+        const typeEl = document.getElementById('modalBacklogType');
+        if (assigneeEl) data.backlogAssigneeId = assigneeEl.value;
+        if (typeEl) data.backlogIssueTypeId = typeEl.value;
     }
 
     const action = taskId ? 'edit_task' : 'add_task';
@@ -170,7 +165,7 @@ function openEditModal(id) {
     const backlogArea = document.getElementById('modalBacklogArea');
     if (backlogArea) backlogArea.style.display = "block";
 
-    const modalTitle = document.getElementById('modalTitle') || document.getElementById('modalHeaderTitle');
+    const modalTitle = document.getElementById('modalTitle');
     if (modalTitle) modalTitle.innerText = "Edit Task (編集モード)";
     
     document.getElementById('modalTaskId').value = task.id;
@@ -179,22 +174,22 @@ function openEditModal(id) {
     document.getElementById('startDate').value = task.startDate || "";
     document.getElementById('endDate').value = task.endDate || "";
     
-    // カテゴリーのセット（ロード完了を待つために少し遅延させる）
+    // カテゴリーのセット（データのロード完了を待つために少し遅延させる）
     setTimeout(() => {
         const catSelect = document.getElementById('taskCategory');
         if (catSelect) catSelect.value = task.categoryId || "";
     }, 150);
 
-    if (document.getElementById('modalBacklogAssignee')) {
-        document.getElementById('modalBacklogAssignee').value = task.backlogAssigneeId || "";
-    }
-    if (document.getElementById('modalBacklogType')) {
-        document.getElementById('modalBacklogType').value = task.backlogIssueTypeId || "";
-    }
+    const assigneeEl = document.getElementById('modalBacklogAssignee');
+    const typeEl = document.getElementById('modalBacklogType');
+    if (assigneeEl) assigneeEl.value = task.backlogAssigneeId || "";
+    if (typeEl) typeEl.value = task.backlogIssueTypeId || "";
 
     const submitBtn = document.getElementById('submitBtn');
-    submitBtn.innerText = "Update Task (更新を保存)";
-    submitBtn.onclick = addTask; 
+    if (submitBtn) {
+        submitBtn.innerText = "Update Task (更新を保存)";
+        submitBtn.onclick = addTask; 
+    }
 }
 
 /**
@@ -304,8 +299,10 @@ function startTaskTimer(id) {
     const task = tasks.find(t => t.id == id);
     let currentTime = parseInt(task.totalTime || 0);
     
-    document.getElementById(`start-btn-${id}`).disabled = true;
-    document.getElementById(`stop-btn-${id}`).disabled = false;
+    const startBtn = document.getElementById(`start-btn-${id}`);
+    const stopBtn = document.getElementById(`stop-btn-${id}`);
+    if (startBtn) startBtn.disabled = true;
+    if (stopBtn) stopBtn.disabled = false;
 
     pipVideo.play().then(() => {
         pipVideo.requestPictureInPicture().catch(err => {
@@ -337,12 +334,14 @@ async function stopTaskTimer(id) {
     }
     
     await saveTimerToDB(id);
-    document.getElementById(`start-btn-${id}`).disabled = false;
-    document.getElementById(`stop-btn-${id}`).disabled = true;
+    const startBtn = document.getElementById(`start-btn-${id}`);
+    const stopBtn = document.getElementById(`stop-btn-${id}`);
+    if (startBtn) startBtn.disabled = false;
+    if (stopBtn) stopBtn.disabled = true;
 }
 
 /**
- * タイマー累積時間の最終保存
+ * タイマー累積時間の保存
  */
 async function saveTimerToDB(id) {
     const displayEl = document.getElementById(`display-time-${id}`);
@@ -374,6 +373,7 @@ async function saveTimerToDB(id) {
 function toggleDetail(id) {
     const detailEl = document.getElementById(`detail-${id}`);
     const btnEl = document.getElementById(`btn-toggle-${id}`);
+    if (!detailEl || !btnEl) return;
     if (detailEl.classList.contains('expanded')) {
         detailEl.classList.remove('expanded');
         btnEl.innerText = 'もっと見る';
@@ -405,6 +405,7 @@ async function loadTemplates() {
  */
 function handleModalTemplateChange() {
     const selector = document.getElementById('modal-template-selector');
+    if (!selector) return;
     const selectedOption = selector.options[selector.selectedIndex];
     if (selectedOption.value) {
         document.getElementById('taskInput').value = selectedOption.dataset.title || "";
@@ -417,22 +418,24 @@ function handleModalTemplateChange() {
  */
 function openTemplateCreateMode() {
     openTaskModal(false);
-    const modalTitle = document.getElementById('modalTitle') || document.getElementById('modalHeaderTitle');
+    const modalTitle = document.getElementById('modalTitle');
     if (modalTitle) modalTitle.innerText = "新規テンプレート作成";
     const submitBtn = document.getElementById('submitBtn');
-    submitBtn.innerText = "テンプレートを保存する";
-    submitBtn.onclick = async function() {
-        const name = prompt("テンプレート名を入力してください");
-        if (!name) return;
-        const data = { name: name, title: document.getElementById('taskInput').value, detail: document.getElementById('taskDetail').value };
-        await fetch('api.php?action=add_template', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-        closeTaskModal();
-        loadTemplates();
-    };
+    if (submitBtn) {
+        submitBtn.innerText = "テンプレートを保存する";
+        submitBtn.onclick = async function() {
+            const name = prompt("テンプレート名を入力してください");
+            if (!name) return;
+            const data = { name: name, title: document.getElementById('taskInput').value, detail: document.getElementById('taskDetail').value };
+            await fetch('api.php?action=add_template', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+            closeTaskModal();
+            loadTemplates();
+        };
+    }
 }
 
 /**
- * 新規タスク追加用の初期化（カテゴリー読み込みを追加）
+ * タスク追加用の初期化（カテゴリー読み込みを追加）
  */
 function openTaskModal(isTemplateMode = false) {
     const modal = document.getElementById('taskModal');
@@ -443,12 +446,17 @@ function openTaskModal(isTemplateMode = false) {
     modal.classList.add('active');
     
     // フィールドのリセット
-    document.getElementById('modalTaskId').value = "";
-    document.getElementById('taskInput').value = "";
-    document.getElementById('taskCategory').value = ""; // カテゴリー選択もリセット
-    document.getElementById('taskDetail').value = "";
+    const taskIdField = document.getElementById('modalTaskId');
+    const taskInput = document.getElementById('taskInput');
+    const taskCat = document.getElementById('taskCategory');
+    const taskDetail = document.getElementById('taskDetail');
     
-    const modalTitle = document.getElementById('modalTitle') || document.getElementById('modalHeaderTitle');
+    if (taskIdField) taskIdField.value = "";
+    if (taskInput) taskInput.value = "";
+    if (taskCat) taskCat.value = ""; // カテゴリー選択もリセット
+    if (taskDetail) taskDetail.value = "";
+    
+    const modalTitle = document.getElementById('modalTitle');
     if (modalTitle) modalTitle.innerText = "New Task";
 
     const submitBtn = document.getElementById('submitBtn');
@@ -458,8 +466,10 @@ function openTaskModal(isTemplateMode = false) {
     }
     
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('startDate').value = today;
-    document.getElementById('endDate').value = today;
+    const startInput = document.getElementById('startDate');
+    const endInput = document.getElementById('endDate');
+    if (startInput) startInput.value = today;
+    if (endInput) endInput.value = today;
 
     const backlogArea = document.getElementById('modalBacklogArea');
     if (backlogArea) backlogArea.style.display = "none";

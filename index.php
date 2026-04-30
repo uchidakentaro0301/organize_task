@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚙☁ 👀 My little Backlog</title>
+    <title>My little Backlog</title>
     <link rel="icon" href="data:,">
     
     <link rel="stylesheet" href="css/style.css">
@@ -107,31 +107,6 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                         <button type="button" class="template-btn" onclick="openTemplateCreateMode()" style="border-radius: 0 14px 14px 0; padding: 0 15px; background: #6366f1;"><span class="icon">＋</span></button>
                     </div>
                 </div>
-
-                <div class="modal-section">
-                    <label>Category (必須)</label>
-                    <select id="taskCategory" class="glass-input-field">
-                        <option value="">-- カテゴリーを選択 --</option>
-                    </select>
-                </div>
-
-                <div id="categoryModal" class="modal-overlay">
-                    <div class="glass-modal">
-                        <div class="modal-header">
-                            <h2>Add New Category</h2>
-                            <button type="button" class="close-modal-btn" onclick="closeCategoryModal()">&times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="modal-section">
-                                <label>Category Name</label>
-                                <input type="text" id="categoryInput" class="glass-input-field" placeholder="カテゴリー名を入力...">
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" onclick="saveCategory()" class="glass-submit-btn" style="background: #10b981;">Save Category</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <div class="board">
                     <div class="column" id="todo"><h2>未着手</h2><div class="task-list"></div></div>
                     <div class="column" id="doing"><h2>進行中</h2><div class="task-list"></div></div>
@@ -176,13 +151,20 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                         <div class="stat-header"><h3>期限切れ</h3></div>
                         <div class="stat-body"><div id="overdue-count" class="stat-value">0</div></div>
                     </div>
+                    <div class="stat-card" id="card-doing-time">
+                        <div class="stat-header"><h3>進行中 合計時間</h3></div>
+                        <div class="stat-body"><div id="doing-total-time" class="stat-value" style="font-size: 1.8rem;">0s</div></div>
+                    </div>
+                    <div class="stat-card" id="card-done-time">
+                        <div class="stat-header"><h3>完了 合計時間</h3></div>
+                        <div class="stat-body"><div id="done-total-time" class="stat-value" style="font-size: 1.8rem;">0s</div></div>
+                    </div>
                     <div class="stat-card" id="card-ranking">
                         <div class="stat-header"><h3>時間消費ランキング</h3></div>
                         <div class="stat-body" style="padding: 10px;">
                             <div id="time-ranking-container" class="placeholder-box"></div>
                         </div>
                     </div>
-
                     <div class="stat-card wide" id="card-completed">
                         <div class="stat-header"><h3>🏁 完了タスク実績詳細</h3></div>
                         <div class="stat-body" style="padding: 0; align-items: stretch;">
@@ -194,20 +176,11 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                             <div id="period-completed-list" class="completed-task-container"></div>
                         </div>
                     </div>
-
                     <div class="stat-card wide" id="card-distribution">
                         <div class="stat-header"><h3>ステータス配分状況</h3></div>
                         <div class="stat-body">
                             <div id="status-distribution-container" class="placeholder-box"></div>
                         </div>
-                    </div>
-                    <div class="stat-card" id="card-doing-time">
-                        <div class="stat-header"><h3>進行中 合計時間</h3></div>
-                        <div class="stat-body"><div id="doing-total-time" class="stat-value" style="font-size: 1.8rem;">0s</div></div>
-                    </div>
-                    <div class="stat-card" id="card-done-time">
-                        <div class="stat-header"><h3>完了 合計時間</h3></div>
-                        <div class="stat-body"><div id="done-total-time" class="stat-value" style="font-size: 1.8rem;">0s</div></div>
                     </div>
                 </div>
             </div>
@@ -243,6 +216,14 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalTaskId">
+                
+                <div class="modal-section">
+                    <label>Category (必須)</label>
+                    <select id="taskCategory" class="glass-input-field">
+                        <option value="">-- カテゴリーを選択 --</option>
+                    </select>
+                </div>
+
                 <div id="modalBacklogArea" class="modal-section" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display:none;">
                     <div class="modal-date-row" style="display: flex; gap: 10px;">
                         <select id="modalBacklogType" class="glass-input-field"></select>
@@ -272,10 +253,28 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
         </div>
     </div>
 
+    <div id="categoryModal" class="modal-overlay">
+        <div class="glass-modal">
+            <div class="modal-header">
+                <h2>Add New Category</h2>
+                <button type="button" class="close-modal-btn" onclick="closeCategoryModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <label>Category Name</label>
+                    <input type="text" id="categoryInput" class="glass-input-field" placeholder="カテゴリー名を入力...">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="saveCategory()" class="glass-submit-btn" style="background: #10b981;">Save Category</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="js/script.js"></script>
     <script src="js/board.js"></script>
     <script src="js/dashboard.js"></script>
-    <script src="js/dashboard_init.js"></script>
+    <script src="js/dashboard_init.js"></script> 
 <?php endif; ?>
 
 <svg style="display: none;">
