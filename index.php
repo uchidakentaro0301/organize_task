@@ -237,14 +237,39 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
     <div id="taskModal" class="modal-overlay">
         <div class="glass-modal">
-            <div class="modal-header"><h2>Task Editor</h2><button type="button" class="close-modal-btn" onclick="closeTaskModal()">&times;</button></div>
+            <div class="modal-header">
+                <h2 id="modalTitle">Task Editor</h2>
+                <button type="button" class="close-modal-btn" onclick="closeTaskModal()">&times;</button>
+            </div>
             <div class="modal-body">
                 <input type="hidden" id="modalTaskId">
-                <div id="modalBacklogArea" class="modal-section" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;"><div class="modal-date-row" style="display: flex; gap: 10px;"><select id="modalBacklogType" class="glass-input-field"></select><select id="modalBacklogAssignee" class="glass-input-field"></select></div></div>
-                <div class="modal-section"><label>Task Name</label><input type="text" id="taskInput" class="glass-input-field"></div>
-                <div class="modal-section"><label>Schedule</label><div class="modal-date-row"><input type="date" id="startDate" class="glass-input-field"><span>→</span><input type="date" id="endDate" class="glass-input-field"></div></div>
-                <div class="modal-section"><label>Details</label><textarea id="taskDetail" rows="4" class="glass-input-field"></textarea></div>
-                <div class="modal-footer"><button type="button" id="submitBtn" onclick="addTask()" class="glass-submit-btn">Confirm Changes</button></div>
+                
+                <div id="modalBacklogArea" class="modal-section" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display:none;">
+                    <div class="modal-date-row" style="display: flex; gap: 10px;">
+                        <select id="modalBacklogType" class="glass-input-field"></select>
+                        <select id="modalBacklogAssignee" class="glass-input-field"></select>
+                    </div>
+                </div>
+                
+                <div class="modal-section">
+                    <label>Task Name</label>
+                    <input type="text" id="taskInput" class="glass-input-field">
+                </div>
+                <div class="modal-section">
+                    <label>Schedule</label>
+                    <div class="modal-date-row">
+                        <input type="date" id="startDate" class="glass-input-field">
+                        <span>→</span>
+                        <input type="date" id="endDate" class="glass-input-field">
+                    </div>
+                </div>
+                <div class="modal-section">
+                    <label>Details</label>
+                    <textarea id="taskDetail" rows="4" class="glass-input-field"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="submitBtn" onclick="addTask()" class="glass-submit-btn">Confirm Changes</button>
+                </div>
             </div>
         </div>
     </div>
@@ -252,8 +277,9 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
     <script src="js/script.js"></script>
     <script src="js/board.js"></script>
     <script src="js/dashboard.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/board.js"></script> <script src="js/dashboard.js"></script>
 <?php endif; ?>
-
 <svg style="display: none;">
   <defs>
     <filter id="glass-distortion">

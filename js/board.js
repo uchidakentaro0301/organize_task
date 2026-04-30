@@ -3,7 +3,7 @@ let pipVideo = null;
 let pipCanvas = null;
 
 /**
- * PiP用の隠し要素を初期化する
+ * PiP用の隠し要素を初期化する (既存)
  */
 function initPipElements() {
     if (pipVideo) return;
@@ -19,7 +19,7 @@ function initPipElements() {
 }
 
 /**
- * Canvasに現在のタイマー状態を描画してPiP映像を更新する
+ * Canvasに現在のタイマー状態を描画してPiP映像を更新する (既存)
  */
 function updatePipCanvas(timeText, taskTitle) {
     if (!pipCanvas) return;
@@ -36,7 +36,7 @@ function updatePipCanvas(timeText, taskTitle) {
     
     // タイマーの描画 (デジタルフォント風)
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 64px sans-serif'; // フォントが読み込まれていない場合を考慮
+    ctx.font = 'bold 64px sans-serif'; 
     ctx.fillText(timeText, 30, 130);
     
     // ステータス表示
@@ -50,7 +50,10 @@ function updatePipCanvas(timeText, taskTitle) {
     }
 }
 
-// タスクの追加・更新
+/**
+ * タスクの追加・更新
+ * IDの有無によってAPIアクションを切り分けます
+ */
 async function addTask() {
     const taskId = document.getElementById('modalTaskId').value;
     const title = document.getElementById('taskInput').value;
@@ -64,11 +67,13 @@ async function addTask() {
         detail: document.getElementById('taskDetail').value
     };
 
+    // 編集時はBacklog連携用のIDも取得
     if (taskId) {
         data.backlogAssigneeId = document.getElementById('modalBacklogAssignee').value;
         data.backlogIssueTypeId = document.getElementById('modalBacklogType').value;
     }
 
+    // ★重要: IDがあれば edit_task、なければ add_task を呼び出す
     const action = taskId ? 'edit_task' : 'add_task';
     const response = await fetch(`api.php?action=${action}`, {
         method: 'POST',
@@ -82,22 +87,37 @@ async function addTask() {
     }
 }
 
-// 編集モーダルを開く
+/**
+ * 編集モーダルを開く
+ * 既存のタスク情報をプレースホルダーと値にセットします
+ */
 function openEditModal(id) {
     const task = tasks.find(t => t.id == id);
     if (!task) return;
 
+    // モーダルを開く（新規・編集共通の初期化を呼び出し）
     openTaskModal(false); 
     
     const backlogArea = document.getElementById('modalBacklogArea');
     if (backlogArea) backlogArea.style.display = "block";
 
-    document.getElementById('modalTitle').innerText = "Edit Task";
-    document.getElementById('modalTaskId').value = task.id;
-    document.getElementById('taskInput').value = task.text;
-    document.getElementById('taskDetail').value = task.detail;
-    document.getElementById('startDate').value = task.startDate;
-    document.getElementById('endDate').value = task.endDate;
+    // モーダルタイトルとボタンの文言を「編集」用に変更
+    const modalTitle = document.getElementById('modalTitle') || document.getElementById('modalHeaderTitle');
+    if (modalTitle) modalTitle.innerText = "Edit Task (編集モード)";
+    
+    document.getElementById('modalTaskId').value = task.id; // IDを隠しフィールドに保持
+    
+    // 現在の値を入力欄にセットし、placeholderでも元の値を表示
+    const taskInput = document.getElementById('taskInput');
+    taskInput.value = task.text;
+    taskInput.placeholder = "元の値: " + task.text;
+
+    const taskDetail = document.getElementById('taskDetail');
+    taskDetail.value = task.detail || "";
+    taskDetail.placeholder = "元の値: " + (task.detail || "なし");
+
+    document.getElementById('startDate').value = task.startDate || "";
+    document.getElementById('endDate').value = task.endDate || "";
     
     if (document.getElementById('modalBacklogAssignee')) {
         document.getElementById('modalBacklogAssignee').value = task.backlogAssigneeId || "";
@@ -107,11 +127,13 @@ function openEditModal(id) {
     }
 
     const submitBtn = document.getElementById('submitBtn');
-    submitBtn.innerText = "Update Task";
+    submitBtn.innerText = "Update Task (更新を保存)";
     submitBtn.onclick = addTask; 
 }
 
-// 描画関数
+/**
+ * 描画関数
+ */
 function render() {
     const columns = ['todo', 'doing', 'done'];
     columns.forEach(status => {
@@ -163,7 +185,9 @@ function render() {
     });
 }
 
-// ステータス更新
+/**
+ * ステータス更新 (既存)
+ */
 async function updateStatus(id, newStatus) {
     if (activeTimers[id]) {
         await stopTaskTimer(id); 
@@ -176,7 +200,9 @@ async function updateStatus(id, newStatus) {
     loadTasksFromServer();
 }
 
-// 削除
+/**
+ * 削除 (既存)
+ */
 async function deleteTask(id) {
     if (!confirm("このタスクを削除しますか？")) return;
     await fetch('api.php?action=delete_task', {
@@ -187,7 +213,9 @@ async function deleteTask(id) {
     loadTasksFromServer();
 }
 
-// 秒フォーマット
+/**
+ * 秒フォーマット (既存)
+ */
 function formatSeconds(s) {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
@@ -197,12 +225,12 @@ function formatSeconds(s) {
 }
 
 /**
- * タイマー開始（PiP起動を含む）
+ * タイマー開始（PiP起動を含む） (既存)
  */
 function startTaskTimer(id) {
     if (activeTimers[id]) return;
     
-    initPipElements(); // PiP要素の初期化
+    initPipElements(); 
 
     const task = tasks.find(t => t.id == id);
     let currentTime = parseInt(task.totalTime || 0);
@@ -210,10 +238,9 @@ function startTaskTimer(id) {
     document.getElementById(`start-btn-${id}`).disabled = true;
     document.getElementById(`stop-btn-${id}`).disabled = false;
 
-    // PiPの起動（ユーザーのクリックイベント内で実行する必要があります）
     pipVideo.play().then(() => {
         pipVideo.requestPictureInPicture().catch(err => {
-            console.warn("PiP起動に失敗しました（ブラウザ設定など）:", err);
+            console.warn("PiP起動に失敗しました:", err);
         });
     });
 
@@ -221,24 +248,21 @@ function startTaskTimer(id) {
         currentTime++;
         const timeText = formatSeconds(currentTime);
         
-        // 画面上の表示を更新
         const timeDisplay = document.getElementById(`display-time-${id}`);
         if (timeDisplay) timeDisplay.innerText = timeText;
         
-        // PiPの映像（Canvas）を更新
         updatePipCanvas(timeText, task.text);
     }, 1000);
 }
 
 /**
- * タイマー停止（PiP終了を含む）
+ * タイマー停止（PiP終了を含む） (既存)
  */
 async function stopTaskTimer(id) {
     if (!activeTimers[id]) return;
     clearInterval(activeTimers[id]);
     delete activeTimers[id];
     
-    // PiPを終了
     if (document.pictureInPictureElement) {
         document.exitPictureInPicture().catch(() => {});
     }
@@ -248,6 +272,9 @@ async function stopTaskTimer(id) {
     document.getElementById(`stop-btn-${id}`).disabled = true;
 }
 
+/**
+ * タイマー時間の保存 (既存)
+ */
 async function saveTimerToDB(id) {
     const displayEl = document.getElementById(`display-time-${id}`);
     if (!displayEl) return;
@@ -272,6 +299,9 @@ async function saveTimerToDB(id) {
     if (idx !== -1) tasks[idx].totalTime = totalSeconds;
 }
 
+/**
+ * 詳細の開閉 (既存)
+ */
 function toggleDetail(id) {
     const detailEl = document.getElementById(`detail-${id}`);
     const btnEl = document.getElementById(`btn-toggle-${id}`);
@@ -284,6 +314,9 @@ function toggleDetail(id) {
     }
 }
 
+/**
+ * テンプレート読み込み (既存)
+ */
 async function loadTemplates() {
     const res = await fetch('api.php?action=fetch_templates');
     const templates = await res.json();
@@ -298,6 +331,9 @@ async function loadTemplates() {
     });
 }
 
+/**
+ * モーダル内テンプレート変更処理 (既存)
+ */
 function handleModalTemplateChange() {
     const selector = document.getElementById('modal-template-selector');
     const selectedOption = selector.options[selector.selectedIndex];
@@ -307,11 +343,16 @@ function handleModalTemplateChange() {
     }
 }
 
+/**
+ * テンプレート作成モード (既存)
+ */
 function openTemplateCreateMode() {
     openTaskModal(false);
-    document.getElementById('modalTitle').innerText = "新規テンプレート作成";
-    document.getElementById('submitBtn').innerText = "テンプレートを保存する";
-    document.getElementById('submitBtn').onclick = async function() {
+    const modalTitle = document.getElementById('modalTitle') || document.getElementById('modalHeaderTitle');
+    if (modalTitle) modalTitle.innerText = "新規テンプレート作成";
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerText = "テンプレートを保存する";
+    submitBtn.onclick = async function() {
         const name = prompt("テンプレート名を入力してください");
         if (!name) return;
         const data = { name: name, title: document.getElementById('taskInput').value, detail: document.getElementById('taskDetail').value };
@@ -319,4 +360,52 @@ function openTemplateCreateMode() {
         closeTaskModal();
         loadTemplates();
     };
+}
+
+/**
+ * 新規タスク追加用の初期化
+ * IDを空にし、UIをリセットしてモーダルを表示します
+ */
+function openTaskModal(isTemplateMode = false) {
+    const modal = document.getElementById('taskModal');
+    if (!modal) return;
+    
+    // モーダルを活性化
+    modal.classList.add('active');
+    
+    // ★重要: 新規作成時はIDを空にし、UIをリセットする
+    const taskIdField = document.getElementById('modalTaskId');
+    if (taskIdField) taskIdField.value = "";
+
+    const modalTitle = document.getElementById('modalTitle') || document.getElementById('modalHeaderTitle');
+    if (modalTitle) modalTitle.innerText = "New Task";
+
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) {
+        submitBtn.innerText = "タスクを登録";
+        submitBtn.onclick = addTask; // 登録用の関数を紐付け
+    }
+    
+    // 入力欄の初期化
+    document.getElementById('taskInput').value = "";
+    document.getElementById('taskInput').placeholder = "タスク名を入力...";
+    document.getElementById('taskDetail').value = "";
+    document.getElementById('taskDetail').placeholder = "詳細を入力...";
+    
+    // 日付を当日にセット
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('startDate').value = today;
+    document.getElementById('endDate').value = today;
+
+    // Backlog設定エリアを隠す
+    const backlogArea = document.getElementById('modalBacklogArea');
+    if (backlogArea) backlogArea.style.display = "none";
+}
+
+/**
+ * モーダルを閉じる
+ */
+function closeTaskModal() { 
+    const modal = document.getElementById('taskModal');
+    if (modal) modal.classList.remove('active'); 
 }
