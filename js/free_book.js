@@ -37,7 +37,7 @@ async function saveFreeNote() {
             body: JSON.stringify({ content: content })
         });
         statusEl.innerText = "Saved to cloud";
-        statusEl.style.color = "rgba(100, 255, 218, 0.7)"; // 保存完了時は少し青緑っぽく
+        statusEl.style.color = "rgb(0, 0, 0)"; // 保存完了時は少し青緑っぽく
     } catch (e) {
         statusEl.innerText = "Save failed";
         statusEl.style.color = "#ff5252";
