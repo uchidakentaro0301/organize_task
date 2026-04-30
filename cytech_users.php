@@ -7,21 +7,20 @@
 
 <div class="glass-modal" style="max-width: 100%; margin: 0 auto; padding: 25px;">
     <div style="overflow-x: auto;">
-        <table class="cytech-table" style="width: 100%; color:rgb(0, 0, 0); border-collapse: collapse; font-size: 0.9rem;">
-            <thead>
-                <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left; background: rgba(255,255,255,0.05);">
-                    <th style="padding: 15px;">ユーザー名</th>
-                    <th style="padding: 15px;">ステップ</th>
-                    <th style="padding: 15px;">回数</th>
-                    <th style="padding: 15px;">状態</th>
-                    <th style="padding: 15px;">開始日</th>
-                    <th style="padding: 15px;">終了日</th>
-                    <th style="padding: 15px;">操作</th>
-                </tr>
-            </thead>
-            <tbody id="cytechUserTableBody">
-                </tbody>
-        </table>
+    <table class="cytech-table" style="width: 100%; color:rgb(0, 0, 0); border-collapse: collapse; font-size: 0.9rem;">
+        <thead>
+            <tr style="border-bottom: 2px solid rgba(0, 0, 0, 0.1); text-align: left; background: rgba(0, 0, 0, 0.05);">
+                <th style="padding: 15px;">ユーザー名</th>
+                <th style="padding: 15px;">ステップ</th>
+                <th style="padding: 15px; text-align: center;">回数</th>
+                <th style="padding: 15px;">状態</th>
+                <th style="padding: 15px;">開始日</th>
+                <th style="padding: 15px;">終了日</th>
+                <th style="padding: 15px; text-align: right;">操作</th>
+            </tr>
+        </thead>
+        <tbody id="cytechUserTableBody"></tbody>
+    </table>
     </div>
 </div>
 

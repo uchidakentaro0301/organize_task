@@ -225,35 +225,55 @@ function closeCyTechUserModal() {
   document.getElementById('cytechUserModal').classList.remove('active');
 }
 
-// データの読み込み
+// データの読み込み（編集ボタンを追加）
 async function loadCyTechUsers() {
   const res = await fetch('api.php?action=fetch_cytech_users');
   const users = await res.json();
   const tbody = document.getElementById('cytechUserTableBody');
   if (!tbody) return;
 
-  tbody.innerHTML = users.map(u => `
+  tbody.innerHTML = users.map(u => {
+      const userJson = JSON.stringify(u).replace(/'/g, "&apos;");
+      return `
       <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
           <td style="padding: 12px;">${escapeHTML(u.username)}</td>
           <td style="padding: 12px;">${escapeHTML(u.step)}</td>
-          <td style="padding: 12px;">${u.count}</td>
+          <td style="padding: 12px; text-align: center;">${u.count}</td>
           <td style="padding: 12px;">
-              <select onchange="updateCyStatus(${u.id}, this.value)" class="glass-input" style="background: ${u.status==='done'?'#10b981':'#ef4444'};">
-                  <option value="doing" ${u.status==='doing'?'selected':''}>処理中</option>
-                  <option value="done" ${u.status==='done'?'selected':''}>完了</option>
+              <select onchange="updateCyStatus(${u.id}, this.value)" class="glass-input" 
+                      style="background: ${u.status === 'done' ? '#10b981' : '#ef4444'}; color: white; border: none; border-radius: 4px; padding: 2px 5px;">
+                  <option value="doing" ${u.status === 'doing' ? 'selected' : ''}>処理中</option>
+                  <option value="done" ${u.status === 'done' ? 'selected' : ''}>完了</option>
               </select>
           </td>
           <td style="padding: 12px;">${u.start_date || '-'}</td>
           <td style="padding: 12px;">${u.end_date || '-'}</td>
-          <td style="padding: 12px;"><button onclick="deleteCyUser(${u.id})" class="glass-icon-btn" style="color:#f87171;">削除</button></td>
+          <td style="padding: 12px; text-align: right; white-space: nowrap;">
+              <button onclick='openEditCyUserModal(${userJson})' class="glass-icon-btn" style="color:#818cf8; margin-right:8px;">編集</button>
+              <button onclick="deleteCyUser(${u.id})" class="glass-icon-btn" style="color:#f87171;">削除</button>
+          </td>
       </tr>
-  `).join('');
+  `}).join('');
 }
 
-// 保存処理
+// 編集モーダルを開く
+function openEditCyUserModal(user) {
+  document.getElementById('cytechUserModal').classList.add('active');
+  document.getElementById('cyUserId').value = user.id;
+  document.getElementById('cyUsername').value = user.username;
+  document.getElementById('cyStep').value = user.step;
+  document.getElementById('cyCount').value = user.count;
+  document.getElementById('cyStatus').value = user.status;
+  document.getElementById('cyStartDate').value = user.start_date;
+  document.getElementById('cyEndDate').value = user.end_date;
+  document.getElementById('cytechModalTitle').innerText = "ユーザー編集";
+}
+
+// 保存処理（新規と編集をIDの有無で切り替え）
 async function saveCyTechUser() {
+  const id = document.getElementById('cyUserId').value;
   const data = {
-      id: document.getElementById('cyUserId').value,
+      id: id,
       username: document.getElementById('cyUsername').value,
       step: document.getElementById('cyStep').value,
       count: document.getElementById('cyCount').value,
@@ -261,14 +281,38 @@ async function saveCyTechUser() {
       startDate: document.getElementById('cyStartDate').value,
       endDate: document.getElementById('cyEndDate').value
   };
-  await fetch('api.php?action=add_cytech_user', {
+  
+  if (!data.username) return alert("ユーザー名を入力してください");
+
+  const action = id ? 'edit_cytech_user' : 'add_cytech_user';
+  
+  await fetch(`api.php?action=${action}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
   });
+  
   closeCyTechUserModal();
   loadCyTechUsers();
 }
 
-// showView関数の中に追記
-if (viewName === 'cytech_users') loadCyTechUsers();
+// ステータスの即時更新
+async function updateCyStatus(id, newStatus) {
+  await fetch('api.php?action=update_cytech_status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id, status: newStatus })
+  });
+  loadCyTechUsers(); // 背景色などを反映させるために再描画
+}
+
+// 削除処理
+async function deleteCyUser(id) {
+  if (!confirm("このユーザーを削除しますか？")) return;
+  await fetch('api.php?action=delete_cytech_user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id })
+  });
+  loadCyTechUsers();
+}

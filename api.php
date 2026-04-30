@@ -147,6 +147,27 @@ switch ($action) {
         echo json_encode(['success' => true]);
         break;
 
+    case 'edit_cytech_user':
+        $d = json_decode(file_get_contents('php://input'), true);
+        $stmt = $pdo->prepare("UPDATE cytech_users SET username=?, step=?, count=?, status=?, start_date=?, end_date=? WHERE id=? AND user_id=?");
+        $stmt->execute([$d['username'], $d['step'], $d['count'], $d['status'], $d['startDate'], $d['endDate'], $d['id'], $user_id]);
+        echo json_encode(['success' => true]);
+        break;
+    
+    case 'delete_cytech_user':
+        $d = json_decode(file_get_contents('php://input'), true);
+        $stmt = $pdo->prepare("DELETE FROM cytech_users WHERE id=? AND user_id=?");
+        $stmt->execute([$d['id'], $user_id]);
+        echo json_encode(['success' => true]);
+        break;
+    
+    case 'update_cytech_status':
+        $d = json_decode(file_get_contents('php://input'), true);
+        $stmt = $pdo->prepare("UPDATE cytech_users SET status=? WHERE id=? AND user_id=?");
+        $stmt->execute([$d['status'], $d['id'], $user_id]);
+        echo json_encode(['success' => true]);
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;
