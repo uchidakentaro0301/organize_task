@@ -283,8 +283,6 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
     <script src="js/script.js"></script>
     <script src="js/board.js"></script>
     <script src="js/dashboard.js"></script>
-    <script src="js/script.js"></script>
-    <script src="js/board.js"></script> <script src="js/dashboard.js"></script>
 <?php endif; ?>
 <svg style="display: none;">
   <defs>

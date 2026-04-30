@@ -1,6 +1,3 @@
-/**
- * script.js - アプリ全体の基盤 (整理済み)
- */
 let tasks = []; 
 let lastAutoSentHour = null;
 
@@ -47,11 +44,16 @@ function showView(viewName) {
   const navItem = document.getElementById('nav-' + viewName);
   if (navItem) navItem.classList.add('active');
 
+  // ビュー切り替え時のデータロード
   if (viewName === 'recurring') loadRecurringTasks();
   if (viewName === 'backlog') loadBacklogMasterData();
   if (viewName === 'dashboard' && typeof updateDashboard === 'function') updateDashboard();
+  if (viewName === 'cytech_users') loadCyTechUsers(); // CyTechユーザー一覧をロード
 }
 
+/* ==========================================================================
+   定期タスク管理
+   ========================================================================== */
 async function loadRecurringTasks() {
   const res = await fetch('api.php?action=fetch_recurring_tasks');
   const data = await res.json();
@@ -108,6 +110,146 @@ async function deleteRecurringTask(id) {
   await fetch('api.php?action=delete_recurring_task', { method: 'POST', body: JSON.stringify({ id }) });
   loadRecurringTasks();
 }
+
+/* ==========================================================================
+   CyTech ユーザー管理 (CRUD)
+   ========================================================================== */
+
+// データの読み込み
+async function loadCyTechUsers() {
+  const res = await fetch('api.php?action=fetch_cytech_users');
+  const users = await res.json();
+  const tbody = document.getElementById('cytechUserTableBody');
+  if (!tbody) return;
+
+  if (users.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="padding: 30px; text-align: center; color: #94a3b8;">登録されたユーザーはいません</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = users.map(u => {
+      const userJson = JSON.stringify(u).replace(/'/g, "&apos;");
+      // ステータスに応じた背景色設定
+      const statusBg = u.status === 'done' ? '#10b981' : '#f87171';
+      
+      return `
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); color:rgb(0, 0, 0);">
+          <td style="padding: 12px;">${escapeHTML(u.username)}</td>
+          <td style="padding: 12px;">${escapeHTML(u.step)}</td>
+          <td style="padding: 12px; text-align: center;">${u.count}</td>
+          <td style="padding: 12px;">
+              <select onchange="updateCyStatus(${u.id}, this.value)" 
+                      style="background: ${statusBg}; 
+                             color: #000000; 
+                             border: 1px solid rgba(0,0,0,0.1); 
+                             border-radius: 20px; 
+                             padding: 4px 12px; 
+                             font-weight: 800; 
+                             font-size: 0.75rem; 
+                             cursor: pointer; 
+                             outline: none;
+                             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                             appearance: auto;">
+                  <option value="doing" ${u.status === 'doing' ? 'selected' : ''} style="color: #000;">処理中</option>
+                  <option value="done" ${u.status === 'done' ? 'selected' : ''} style="color: #000;">完了</option>
+              </select>
+          </td>
+          <td style="padding: 12px;">${u.start_date || '-'}</td>
+          <td style="padding: 12px;">${u.end_date || '-'}</td>
+          <td style="padding: 12px; text-align: right; white-space: nowrap;">
+              <button onclick='openEditCyUserModal(${userJson})' class="glass-icon-btn" style="color:#818cf8; margin-right:8px;">編集</button>
+              <button onclick="deleteCyUser(${u.id})" class="glass-icon-btn" style="color:#f87171;">削除</button>
+          </td>
+      </tr>
+  `}).join('');
+}
+
+// 登録モーダルを開く (リセット)
+function openCyTechUserModal() {
+  const modal = document.getElementById('cytechUserModal');
+  if (!modal) return;
+  modal.classList.add('active');
+  document.getElementById('cyUserId').value = "";
+  document.getElementById('cyUsername').value = "";
+  document.getElementById('cyStep').value = "";
+  document.getElementById('cyCount').value = "1";
+  document.getElementById('cyStatus').value = "doing";
+  document.getElementById('cyStartDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('cyEndDate').value = "";
+  document.getElementById('cytechModalTitle').innerText = "新規ユーザー登録";
+}
+
+// 編集モーダルを開く
+function openEditCyUserModal(user) {
+  const modal = document.getElementById('cytechUserModal');
+  if (!modal) return;
+  modal.classList.add('active');
+  document.getElementById('cyUserId').value = user.id;
+  document.getElementById('cyUsername').value = user.username;
+  document.getElementById('cyStep').value = user.step;
+  document.getElementById('cyCount').value = user.count;
+  document.getElementById('cyStatus').value = user.status;
+  document.getElementById('cyStartDate').value = user.start_date;
+  document.getElementById('cyEndDate').value = user.end_date;
+  document.getElementById('cytechModalTitle').innerText = "ユーザー編集";
+}
+
+function closeCyTechUserModal() {
+  document.getElementById('cytechUserModal').classList.remove('active');
+}
+
+// 保存処理 (新規登録と編集の共通)
+async function saveCyTechUser() {
+  const id = document.getElementById('cyUserId').value;
+  const data = {
+      id: id,
+      username: document.getElementById('cyUsername').value,
+      step: document.getElementById('cyStep').value,
+      count: document.getElementById('cyCount').value,
+      status: document.getElementById('cyStatus').value,
+      startDate: document.getElementById('cyStartDate').value,
+      endDate: document.getElementById('cyEndDate').value
+  };
+  
+  if (!data.username) return alert("ユーザー名を入力してください");
+
+  const action = id ? 'edit_cytech_user' : 'add_cytech_user';
+  
+  try {
+    await fetch(`api.php?action=${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    closeCyTechUserModal();
+    loadCyTechUsers();
+  } catch (e) { console.error("保存エラー:", e); }
+}
+
+// ステータスの即時更新
+async function updateCyStatus(id, newStatus) {
+  await fetch('api.php?action=update_cytech_status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id, status: newStatus })
+  });
+  loadCyTechUsers(); 
+}
+
+// 削除処理
+async function deleteCyUser(id) {
+  if (!confirm("このユーザーを削除しますか？")) return;
+  await fetch('api.php?action=delete_cytech_user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: id })
+  });
+  loadCyTechUsers();
+}
+
+/* ==========================================================================
+   既存のユーティリティ・外部連携
+   ========================================================================== */
 
 function openTaskModal(isTemplateMode = false) {
   const modal = document.getElementById('taskModal');
@@ -207,112 +349,8 @@ function escapeHTML(str) {
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
 function toggleSlackSettings() {
   const content = document.getElementById('slackContent');
-  content.style.display = (content.style.display === 'none' || content.style.display === '') ? 'block' : 'none';
+  if (content) content.style.display = (content.style.display === 'none' || content.style.display === '') ? 'block' : 'none';
 }
 function toggleSlackLock() { document.getElementById('slackUrl').disabled = !document.getElementById('slackUrl').disabled; }
 function saveSlackUrl() { localStorage.setItem('slackWebhookUrl', document.getElementById('slackUrl').value); toggleSlackLock(); }
 function confirmReset() { if (confirm("全リセットしますか？")) { tasks = []; loadTasksFromServer(); } }
-
-// モーダルを開く
-function openCyTechUserModal() {
-  document.getElementById('cytechUserModal').classList.add('active');
-  document.getElementById('cyUserId').value = "";
-  document.getElementById('cyUsername').value = "";
-  // ...他の項目もリセット
-}
-
-function closeCyTechUserModal() {
-  document.getElementById('cytechUserModal').classList.remove('active');
-}
-
-// データの読み込み（編集ボタンを追加）
-async function loadCyTechUsers() {
-  const res = await fetch('api.php?action=fetch_cytech_users');
-  const users = await res.json();
-  const tbody = document.getElementById('cytechUserTableBody');
-  if (!tbody) return;
-
-  tbody.innerHTML = users.map(u => {
-      const userJson = JSON.stringify(u).replace(/'/g, "&apos;");
-      return `
-      <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-          <td style="padding: 12px;">${escapeHTML(u.username)}</td>
-          <td style="padding: 12px;">${escapeHTML(u.step)}</td>
-          <td style="padding: 12px; text-align: center;">${u.count}</td>
-          <td style="padding: 12px;">
-              <select onchange="updateCyStatus(${u.id}, this.value)" class="glass-input" 
-                      style="background: ${u.status === 'done' ? '#10b981' : '#ef4444'}; color: white; border: none; border-radius: 4px; padding: 2px 5px;">
-                  <option value="doing" ${u.status === 'doing' ? 'selected' : ''}>処理中</option>
-                  <option value="done" ${u.status === 'done' ? 'selected' : ''}>完了</option>
-              </select>
-          </td>
-          <td style="padding: 12px;">${u.start_date || '-'}</td>
-          <td style="padding: 12px;">${u.end_date || '-'}</td>
-          <td style="padding: 12px; text-align: right; white-space: nowrap;">
-              <button onclick='openEditCyUserModal(${userJson})' class="glass-icon-btn" style="color:#818cf8; margin-right:8px;">編集</button>
-              <button onclick="deleteCyUser(${u.id})" class="glass-icon-btn" style="color:#f87171;">削除</button>
-          </td>
-      </tr>
-  `}).join('');
-}
-
-// 編集モーダルを開く
-function openEditCyUserModal(user) {
-  document.getElementById('cytechUserModal').classList.add('active');
-  document.getElementById('cyUserId').value = user.id;
-  document.getElementById('cyUsername').value = user.username;
-  document.getElementById('cyStep').value = user.step;
-  document.getElementById('cyCount').value = user.count;
-  document.getElementById('cyStatus').value = user.status;
-  document.getElementById('cyStartDate').value = user.start_date;
-  document.getElementById('cyEndDate').value = user.end_date;
-  document.getElementById('cytechModalTitle').innerText = "ユーザー編集";
-}
-
-// 保存処理（新規と編集をIDの有無で切り替え）
-async function saveCyTechUser() {
-  const id = document.getElementById('cyUserId').value;
-  const data = {
-      id: id,
-      username: document.getElementById('cyUsername').value,
-      step: document.getElementById('cyStep').value,
-      count: document.getElementById('cyCount').value,
-      status: document.getElementById('cyStatus').value,
-      startDate: document.getElementById('cyStartDate').value,
-      endDate: document.getElementById('cyEndDate').value
-  };
-  
-  if (!data.username) return alert("ユーザー名を入力してください");
-
-  const action = id ? 'edit_cytech_user' : 'add_cytech_user';
-  
-  await fetch(`api.php?action=${action}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-  });
-  
-  closeCyTechUserModal();
-  loadCyTechUsers();
-}
-
-// ステータスの即時更新
-async function updateCyStatus(id, newStatus) {
-  await fetch('api.php?action=update_cytech_status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: id, status: newStatus })
-  });
-  loadCyTechUsers(); // 背景色などを反映させるために再描画
-}
-
-// 削除処理
-async function deleteCyUser(id) {
-  if (!confirm("このユーザーを削除しますか？")) return;
-  await fetch('api.php?action=delete_cytech_user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: id })
-  });
-  loadCyTechUsers();
-}
