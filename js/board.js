@@ -204,49 +204,80 @@ function render() {
 
         const filteredTasks = tasks.filter(t => t.status === status);
 
-        filteredTasks.forEach(task => {
-            const card = document.createElement('div');
-            card.className = `task-card ${status}`;
-            const savedTime = task.totalTime || 0;
+        if (status === 'done') {
+            // --- 完了カラム：カテゴリー別にフォルダー分け ---
+            const grouped = {};
+            filteredTasks.forEach(task => {
+                const catName = task.categoryName || '未分類';
+                if (!grouped[catName]) grouped[catName] = [];
+                grouped[catName].push(task);
+            });
 
-            card.innerHTML = `
-                <a class="task-edit-link" onclick="openEditModal('${task.id}')">編集</a>
-                <div class="task-category-tag" style="font-size:0.65rem; color:#6366f1; font-weight:bold; margin-bottom:4px;">
-                    # ${escapeHTML(task.categoryName || '未分類')}
-                </div>
-                <div class="task-title">${escapeHTML(task.text)}</div>
-                <div class="task-date-info">🗓️ ${task.startDate || '-'} 〜 ${task.endDate || '-'}</div>
-                <div id="detail-${task.id}" class="task-detail">${escapeHTML(task.detail)}</div>
-                ${task.detail ? `<span class="toggle-detail-btn" onclick="toggleDetail('${task.id}')" id="btn-toggle-${task.id}">もっと見る</span>` : ''}
+            for (const catName in grouped) {
+                const folder = document.createElement('div');
+                folder.className = 'category-folder';
+                
+                const taskCardsHtml = grouped[catName].map(task => createCardHtml(task)).join('');
 
-                <div class="task-stopwatch liquidGlass-wrapper">
-                    <div class="liquidGlass-effect"></div>
-                    <div class="liquidGlass-tint"></div>
-                    <div class="liquidGlass-shine"></div>
-                    
-                    <div class="timer-content-inner" style="z-index: 3; display: flex; width: 100%; align-items: center; gap: 10px;">
-                        <div class="timer-display-container" style="flex: 1;">
-                            <div class="timer-label" style="font-size: 0.5rem; font-weight: 800; color: rgba(0,0,0,0.4); margin-bottom: 2px;">● REC</div>
-                            <div id="display-time-${task.id}" class="liquidGlass-text" style="font-family: 'Orbitron', monospace; font-size: 1.1rem; font-weight: 700; color: #000; text-align: center;">${formatSeconds(savedTime)}</div>
-                        </div>
-                        <div class="timer-controls" style="display: flex; flex-direction: column; gap: 2px;">
-                            <button id="start-btn-${task.id}" class="timer-btn start" onclick="startTaskTimer('${task.id}')" ${task.status === 'done' ? 'disabled' : ''}>RUN</button>
-                            <button id="stop-btn-${task.id}" class="timer-btn stop" onclick="stopTaskTimer('${task.id}')" disabled>STOP</button>
-                        </div>
+                folder.innerHTML = `
+                    <div class="category-folder-header" onclick="this.nextElementSibling.style.display = (this.nextElementSibling.style.display === 'none' ? 'block' : 'none')">
+                        <span>📂 ${escapeHTML(catName)} (${grouped[catName].length})</span>
+                        <span style="font-size: 0.7rem;">クリックで開閉</span>
+                    </div>
+                    <div class="category-folder-content">
+                        ${taskCardsHtml}
+                    </div>
+                `;
+                list.appendChild(folder);
+            }
+        } else {
+            // --- 未着手・進行中：通常表示 ---
+            filteredTasks.forEach(task => {
+                const cardWrapper = document.createElement('div');
+                cardWrapper.innerHTML = createCardHtml(task);
+                list.appendChild(cardWrapper.firstElementChild);
+            });
+        }
+    });
+}
+
+/**
+ * 共通のカードHTML生成関数（重複を避けるために分離）
+ */
+function createCardHtml(task) {
+    const savedTime = task.totalTime || 0;
+    return `
+        <div class="task-card ${task.status}">
+            <a class="task-edit-link" onclick="openEditModal('${task.id}')">編集</a>
+            <div class="task-category-tag" style="font-size:0.65rem; color:#6366f1; font-weight:bold; margin-bottom:4px;">
+                # ${escapeHTML(task.categoryName || '未分類')}
+            </div>
+            <div class="task-title">${escapeHTML(task.text)}</div>
+            <div class="task-date-info">🗓️ ${task.startDate || '-'} 〜 ${task.endDate || '-'}</div>
+            <div id="detail-${task.id}" class="task-detail">${escapeHTML(task.detail)}</div>
+            ${task.detail ? `<span class="toggle-detail-btn" onclick="toggleDetail('${task.id}')" id="btn-toggle-${task.id}">もっと見る</span>` : ''}
+
+            <div class="task-stopwatch liquidGlass-wrapper">
+                <div class="timer-content-inner" style="z-index: 3; display: flex; width: 100%; align-items: center; gap: 10px;">
+                    <div class="timer-display-container" style="flex: 1;">
+                        <div class="timer-label" style="font-size: 0.5rem; font-weight: 800; color: rgba(0,0,0,0.4); margin-bottom: 2px;">● REC</div>
+                        <div id="display-time-${task.id}" class="liquidGlass-text" style="font-family: 'Orbitron', monospace; font-size: 1.1rem; font-weight: 700; color: #000; text-align: center;">${formatSeconds(savedTime)}</div>
+                    </div>
+                    <div class="timer-controls" style="display: flex; flex-direction: column; gap: 2px;">
+                        <button id="start-btn-${task.id}" class="timer-btn start" onclick="startTaskTimer('${task.id}')" ${task.status === 'done' ? 'disabled' : ''}>RUN</button>
+                        <button id="stop-btn-${task.id}" class="timer-btn stop" onclick="stopTaskTimer('${task.id}')" disabled>STOP</button>
                     </div>
                 </div>
-                
-                <div class="btn-group">
-                    <button class="btn-todo" onclick="updateStatus('${task.id}', 'todo')">未着手</button>
-                    <button class="btn-doing" onclick="updateStatus('${task.id}', 'doing')">処理中</button>
-                    <button class="btn-done" onclick="updateStatus('${task.id}', 'done')">完了</button>
-                    <button class="btn-backlog-sync" onclick="syncToBacklog('${task.id}')">Backlog追加</button>
-                    <button class="btn-delete" onclick="deleteTask('${task.id}')">削除</button>
-                </div>
-            `;
-            list.appendChild(card);
-        });
-    });
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-todo" onclick="updateStatus('${task.id}', 'todo')">未着手</button>
+                <button class="btn-doing" onclick="updateStatus('${task.id}', 'doing')">処理中</button>
+                <button class="btn-done" onclick="updateStatus('${task.id}', 'done')">完了</button>
+                <button class="btn-delete" onclick="deleteTask('${task.id}')">削除</button>
+            </div>
+        </div>
+    `;
 }
 
 /**
