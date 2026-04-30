@@ -212,3 +212,4 @@ function toggleSlackSettings() {
 function toggleSlackLock() { document.getElementById('slackUrl').disabled = !document.getElementById('slackUrl').disabled; }
 function saveSlackUrl() { localStorage.setItem('slackWebhookUrl', document.getElementById('slackUrl').value); toggleSlackLock(); }
 function confirmReset() { if (confirm("全リセットしますか？")) { tasks = []; loadTasksFromServer(); } }
+

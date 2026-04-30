@@ -115,6 +115,9 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                 <button type="button" onclick="showView('dashboard')" id="nav-dashboard" class="nav-item"><span class="icon">📊</span> <span class="nav-text">ダッシュボード</span></button>
                 <button type="button" onclick="showView('backlog')" id="nav-backlog" class="nav-item"><span class="icon">🚀</span> <span class="nav-text">Backlog</span></button>
                 <button type="button" onclick="showView('recurring')" id="nav-recurring" class="nav-item"><span class="icon">🔄</span> <span class="nav-text">定期タスク</span></button>
+                <button type="button" onclick="showView('cytech_users')" id="nav-cytech_users" class="nav-item">
+                    <span class="icon">👥</span> <span class="nav-text">CyTechユーザー</span>
+                </button>
             </nav>
             <div class="sidebar-footer">
                 <div class="glass-collapsible">
@@ -136,6 +139,9 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
         </aside>
 
         <main class="main-content">
+        <div id="cytech_usersView" class="view">
+            <?php include 'cytech_users.php'; ?>
+        </div>
             <div id="boardView" class="view active">
                 <div class="top-action-area">
                     <button type="button" class="open-modal-btn" onclick="openTaskModal()"><span class="icon">＋</span> 新しいタスクを追加</button>
