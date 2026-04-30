@@ -34,3 +34,33 @@
     background-color: #6366f1 !important;
     border: 2px dashed #6366f1;
 }
+
+.period-tab-container {
+    display: flex;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    width: 100%;
+}
+.period-tab {
+    flex: 1; padding: 12px; border: none; background: none; cursor: pointer;
+    font-size: 0.8rem; font-weight: bold; color: #94a3b8; transition: 0.3s;
+}
+.period-tab.active {
+    color: #6366f1; border-bottom: 2px solid #6366f1; background: rgba(99, 102, 241, 0.05);
+}
+.completed-task-container {
+    width: 100%; max-height: 280px; overflow-y: auto;
+}
+.completed-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.03); font-size: 0.85rem;
+}
+.completed-name { color: #334155; text-align: left; flex: 1; font-weight: 500; }
+.completed-time { font-weight: bold; color: #6366f1; margin-left: 15px; font-family: monospace; }
+
+.stat-card { cursor: grab; }
+.stat-card:active { cursor: grabbing; }
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: #6366f1 !important;
+    border: 2px dashed #6366f1;
+}

@@ -105,7 +105,7 @@ function renderPeriodTasks() {
         } else if (currentPeriodView === 'quarterly') {
             // 今四半期
             const currentQuarter = Math.floor(now.getMonth() / 3);
-            const taskQuarter = Math.floor(taskDate.getMonth() / 3);
+            const taskQuarter = Math.floor(taskDate.getMonth() / 3); // typo: getMonthに修正
             return currentQuarter === taskQuarter && taskDate.getFullYear() === now.getFullYear();
         }
         return false;
@@ -128,7 +128,7 @@ function renderPeriodTasks() {
 }
 
 /**
- * ステータス配分状況の描画（「進行中」「完了」の合計時間表示を統合）
+ * ステータス配分状況の描画（「進行中」「完了」の合計時間表示を含む）
  */
 async function updateStatusDistribution() {
     const container = document.getElementById('status-distribution-container');
@@ -141,13 +141,12 @@ async function updateStatusDistribution() {
         if (result.success) {
             const data = result.data;
 
-            // --- 追加：ステータス別の合計時間を反映 ---
+            // ステータス別の合計時間を反映
             const doingTimeEl = document.getElementById('doing-total-time');
             if (doingTimeEl) doingTimeEl.innerText = formatTaskTime(data.doing_time || 0);
 
             const doneTimeEl = document.getElementById('done-total-time');
             if (doneTimeEl) doneTimeEl.innerText = formatTaskTime(data.done_time || 0);
-            // ----------------------------------------
 
             const total = data.total;
             const getPercent = (count) => total > 0 ? Math.round((count / total) * 100) : 0;
@@ -238,4 +237,53 @@ function escapeHTML(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+/**
+ * ダッシュボードの内容をCSV出力する
+ */
+function exportDashboardToCSV() {
+    // データ収集
+    const stats = [
+        ["ダッシュボード統計レポート", new Date().toLocaleString()],
+        [],
+        ["項目", "値"],
+        ["総タスク数", document.getElementById('total-count')?.innerText || "0"],
+        ["残タスク", document.getElementById('remaining-count')?.innerText || "0"],
+        ["完了率", document.getElementById('progress-rate')?.innerText || "0%"],
+        ["期限切れ", document.getElementById('overdue-count')?.innerText || "0"],
+        ["作業密度 (平均)", document.getElementById('average-task-time')?.innerText || "0s"],
+        ["進行中 合計時間", document.getElementById('doing-total-time')?.innerText || "0s"],
+        ["完了 合計時間", document.getElementById('done-total-time')?.innerText || "0s"]
+    ];
+
+    // ステータス配分（DOMから解析して追加）
+    stats.push([], ["ステータス内訳", "件数"]);
+    const distributionItems = document.querySelectorAll('#status-distribution-container > div > div');
+    distributionItems.forEach(item => {
+        const labels = item.querySelectorAll('span');
+        if (labels.length >= 2) {
+            stats.push([labels[0].innerText, labels[1].innerText]);
+        }
+    });
+
+    // CSV文字列の生成
+    const csvContent = stats.map(row => 
+        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+    ).join("\n");
+
+    // ダウンロード処理 (UTF-8 with BOM)
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    
+    const timestamp = new Date().toISOString().slice(0,10).replace(/-/g, "");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `dashboard_report_${timestamp}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }

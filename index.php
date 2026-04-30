@@ -12,12 +12,14 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
     
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/board.css">
-    <link rel="stylesheet" href="css/dashboard_layout.css"> <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/dashboard_layout.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     
-    <script src="js/auth.js"></script> </head>
+    <script src="js/auth.js"></script>
+</head>
 <body>
 
 <?php if (!isset($_SESSION['user_id'])): ?>
@@ -103,7 +105,12 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
             </div>
 
             <div id="dashboardView" class="view">
-                <div class="dashboard-header"><h1>ダッシュボード</h1></div>
+                <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h1>ダッシュボード</h1>
+                    <button type="button" class="glass-action-btn" onclick="exportDashboardToCSV()" style="width: auto; padding: 8px 20px; background: #10b981; border: none; font-size: 0.85rem;">
+                        <span class="icon">📊</span> <span class="nav-text">CSV出力</span>
+                    </button>
+                </div>
                 <div class="dashboard-grid">
                     <div class="stat-card" id="card-total">
                         <div class="stat-header"><h3>総タスク数</h3></div>
@@ -233,7 +240,8 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
     <script src="js/script.js"></script>
     <script src="js/board.js"></script>
     <script src="js/dashboard.js"></script>
-    <script src="js/dashboard_init.js"></script> <?php endif; ?>
+    <script src="js/dashboard_init.js"></script>
+<?php endif; ?>
 
 <svg style="display: none;">
   <defs>
