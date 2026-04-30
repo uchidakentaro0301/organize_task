@@ -1,6 +1,8 @@
 /**
- * dashboard.js - 集計・分析ロジック (作業密度を総タスク数カード内に統合)
+ * dashboard.js - 集計・分析ロジック (期間別詳細実績・エラー修正版)
  */
+
+let currentPeriodView = 'weekly'; // デフォルトの期間表示設定
 
 /**
  * ダッシュボード全体の更新
@@ -18,7 +20,7 @@ async function updateDashboard() {
     const todayStr = new Date().toISOString().split('T')[0];
     const overdue = tasks.filter(t => t.status !== 'done' && t.endDate && t.endDate < todayStr).length;
 
-    // 2. 作業密度の計算 (時間・分・秒表示)
+    // 2. 作業密度の計算
     updateAverageWorkDensity(doneTasks);
 
     // 3. 数値統計の反映
@@ -42,16 +44,16 @@ async function updateDashboard() {
     // 4. 分析データの更新
     await updateStatusDistribution();
     updateTimeRanking();
+    renderPeriodTasks(); // 期間別実績リストの描画
 }
 
 /**
- * 作業密度（完了タスク1件あたりの平均時間）を計算
+ * 作業密度の計算
  */
 function updateAverageWorkDensity(doneTasks) {
     const avgDisplay = document.getElementById('average-task-time');
     if (!avgDisplay) return;
 
-    // 完了済みかつ計測時間があるタスクを抽出
     const timedDoneTasks = doneTasks.filter(t => (t.totalTime || 0) > 0);
     
     if (timedDoneTasks.length === 0) {
@@ -59,21 +61,75 @@ function updateAverageWorkDensity(doneTasks) {
         return;
     }
 
-    // 平均秒数を算出
     const totalSeconds = timedDoneTasks.reduce((sum, t) => sum + parseInt(t.totalTime), 0);
     const avgSeconds = Math.floor(totalSeconds / timedDoneTasks.length);
 
-    // 時間・分・秒に分解
-    const h = Math.floor(avgSeconds / 3600);
-    const m = Math.floor((avgSeconds % 3600) / 60);
-    const s = avgSeconds % 60;
+    avgDisplay.innerText = formatTaskTime(avgSeconds);
+}
 
-    let timeParts = [];
-    if (h > 0) timeParts.push(`${h}h`);
-    if (m > 0) timeParts.push(`${m}m`);
-    if (s > 0 || timeParts.length === 0) timeParts.push(`${s}s`);
+/**
+ * 【重要：エラー修正箇所】 期間表示の切り替え関数
+ * index.phpのonclick="switchPeriodList(...)"から呼び出されます
+ */
+function switchPeriodList(period) {
+    currentPeriodView = period;
     
-    avgDisplay.innerText = timeParts.join(' ');
+    // タブの見た目（activeクラス）を更新
+    document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+    const activeTab = document.getElementById(`tab-${period}`);
+    if (activeTab) activeTab.classList.add('active');
+    
+    // リストを再描画
+    renderPeriodTasks();
+}
+
+/**
+ * 期間別のタスクリストを描画
+ */
+function renderPeriodTasks() {
+    const container = document.getElementById('period-completed-list');
+    if (!container || typeof tasks === 'undefined') return;
+
+    const now = new Date();
+    const doneTasks = tasks.filter(t => t.status === 'done');
+
+    const filtered = doneTasks.filter(t => {
+        if (!t.endDate) return false;
+        const taskDate = new Date(t.endDate);
+        
+        if (currentPeriodView === 'weekly') {
+            // 今週（月曜始まり）
+            const day = now.getDay() || 7;
+            const monday = new Date(now);
+            monday.setDate(now.getDate() - day + 1);
+            monday.setHours(0,0,0,0);
+            return taskDate >= monday;
+        } else if (currentPeriodView === 'monthly') {
+            // 今月
+            return taskDate.getMonth() === now.getMonth() && taskDate.getFullYear() === now.getFullYear();
+        } else if (currentPeriodView === 'quarterly') {
+            // 今四半期
+            const currentQuarter = Math.floor(now.getMonth() / 3);
+            const taskQuarter = Math.floor(taskDate.getMonth() / 3);
+            return currentQuarter === taskQuarter && taskDate.getFullYear() === now.getFullYear();
+        }
+        return false;
+    });
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div style="padding:30px; color:#94a3b8; text-align:center; font-size:0.8rem;">完了したタスクはありません</div>';
+        return;
+    }
+
+    // ソート（新しい順）
+    filtered.sort((a, b) => new Date(b.endDate) - new Date(a.endDate));
+    
+    container.innerHTML = filtered.map(t => `
+        <div class="completed-item">
+            <span class="completed-name">${escapeHTML(t.text)}</span>
+            <span class="completed-time">${formatTaskTime(t.totalTime || 0)}</span>
+        </div>
+    `).join('');
 }
 
 /**
@@ -137,20 +193,7 @@ function updateTimeRanking() {
     }
 
     let html = `<div style="display: flex; flex-direction: column; gap: 8px;">`;
-
     rankedTasks.forEach((t, index) => {
-        const s = parseInt(t.totalTime);
-        const h = Math.floor(s / 3600);
-        const m = Math.floor((s % 3600) / 60);
-        const sec = s % 60;
-        
-        let timeParts = [];
-        if (h > 0) timeParts.push(`${h}h`);
-        if (m > 0) timeParts.push(`${m}m`);
-        if (sec > 0 || timeParts.length === 0) timeParts.push(`${sec}s`);
-        
-        const timeStr = timeParts.join('');
-
         html += `
             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.03); padding-bottom: 4px;">
                 <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%; color: #475569;">
@@ -158,18 +201,33 @@ function updateTimeRanking() {
                     <span>${escapeHTML(t.text)}</span>
                 </div>
                 <div style="font-weight: bold; color: #1e1b4b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">
-                    ${timeStr}
+                    ${formatTaskTime(t.totalTime)}
                 </div>
             </div>
         `;
     });
-
     html += `</div>`;
     container.innerHTML = html;
 }
 
 /**
- * 共通エスケープ関数
+ * 秒数を「○h ○m ○s」形式に変換
+ */
+function formatTaskTime(totalSeconds) {
+    const s = parseInt(totalSeconds);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    
+    let parts = [];
+    if (h > 0) parts.push(`${h}h`);
+    if (m > 0) parts.push(`${m}m`);
+    if (sec > 0 || parts.length === 0) parts.push(`${sec}s`);
+    return parts.join(' ');
+}
+
+/**
+ * HTMLエスケープ
  */
 function escapeHTML(str) {
     if (!str) return '';

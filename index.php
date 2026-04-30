@@ -30,7 +30,7 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
         .then(data => {
             if (data.success) {
                 console.log("ログイン成功、画面をリロードします。");
-                window.location.reload(); // リロードすることでPHP側のisset($_SESSION['user_id'])が真になり、ボードが表示されます
+                window.location.reload(); 
             } else {
                 alert('ログインに失敗しました: ' + (data.message || '不明なエラー'));
             }
@@ -41,13 +41,38 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
         });
     }
 
-    // サイドバー切り替え等の基本関数も先行定義
+    // サイドバー切り替え等の基本関数
     function toggleSidebar() { document.getElementById('sidebar')?.classList.toggle('collapsed'); }
     function toggleSlackSettings() {
         const content = document.getElementById('slackContent');
         if (content) content.style.display = (content.style.display === 'none' || content.style.display === '') ? 'block' : 'none';
     }
     </script>
+
+    <style>
+        /* 期間別実績リスト用追加スタイル */
+        .period-tab-container {
+            display: flex;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            width: 100%;
+        }
+        .period-tab {
+            flex: 1; padding: 12px; border: none; background: none; cursor: pointer;
+            font-size: 0.8rem; font-weight: bold; color: #94a3b8; transition: 0.3s;
+        }
+        .period-tab.active {
+            color: #6366f1; border-bottom: 2px solid #6366f1; background: rgba(99, 102, 241, 0.05);
+        }
+        .completed-task-container {
+            width: 100%; max-height: 280px; overflow-y: auto;
+        }
+        .completed-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.03); font-size: 0.85rem;
+        }
+        .completed-name { color: #334155; text-align: left; flex: 1; font-weight: 500; }
+        .completed-time { font-weight: bold; color: #6366f1; margin-left: 15px; font-family: monospace; }
+    </style>
 </head>
 <body>
 
@@ -93,8 +118,17 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
             </nav>
             <div class="sidebar-footer">
                 <div class="glass-collapsible">
-                    <div class="slack-header" onclick="toggleSlackSettings()"><div class="slack-title-combined"><span class="icon">🔗</span><span class="nav-text">Slack連携</span></div><span id="slackArrow" class="nav-text">▼</span></div>
-                    <div id="slackContent" class="slack-body" style="display: none;"><div class="slack-input-group"><input type="password" id="slackUrl" class="glass-input" placeholder="Webhook URL" onchange="saveSlackUrl()" disabled><button id="slackLockBtn" class="glass-icon-btn" onclick="toggleSlackLock()">🔒</button><button type="button" class="glass-icon-btn action-test" onclick="sendSlackNotification()">🚀</button></div></div>
+                    <div class="slack-header" onclick="toggleSlackSettings()">
+                        <div class="slack-title-combined"><span class="icon">🔗</span><span class="nav-text">Slack連携</span></div>
+                        <span id="slackArrow" class="nav-text">▼</span>
+                    </div>
+                    <div id="slackContent" class="slack-body" style="display: none;">
+                        <div class="slack-input-group">
+                            <input type="password" id="slackUrl" class="glass-input" placeholder="Webhook URL" onchange="saveSlackUrl()" disabled>
+                            <button id="slackLockBtn" class="glass-icon-btn" onclick="toggleSlackLock()">🔒</button>
+                            <button type="button" class="glass-icon-btn action-test" onclick="sendSlackNotification()">🚀</button>
+                        </div>
+                    </div>
                 </div>
                 <button type="button" class="glass-action-btn danger" onclick="confirmReset()"><span class="icon">⚠️</span> <span class="nav-text">全リセット</span></button>
                 <button type="button" onclick="location.href='logout.php'" class="glass-action-btn logout"><span class="icon">🚪</span> <span class="nav-text">ログアウト</span></button>
@@ -155,6 +189,20 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                             <div id="time-ranking-container" class="placeholder-box"></div>
                         </div>
                     </div>
+
+                    <div class="stat-card wide">
+                        <div class="stat-header"><h3>🏁 完了タスク実績詳細</h3></div>
+                        <div class="stat-body" style="padding: 0; align-items: stretch;">
+                            <div class="period-tab-container">
+                                <button onclick="switchPeriodList('weekly')" class="period-tab active" id="tab-weekly">今週</button>
+                                <button onclick="switchPeriodList('monthly')" class="period-tab" id="tab-monthly">今月</button>
+                                <button onclick="switchPeriodList('quarterly')" class="period-tab" id="tab-quarterly">四半期</button>
+                            </div>
+                            <div id="period-completed-list" class="completed-task-container">
+                                </div>
+                        </div>
+                    </div>
+
                     <div class="stat-card wide">
                         <div class="stat-header"><h3>ステータス配分状況</h3></div>
                         <div class="stat-body">
@@ -167,7 +215,8 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
             <div id="backlogView" class="view">
                 <div class="dashboard-header"><h1>Direct Registration</h1></div>
                 <div class="glass-modal" style="max-width: 600px; margin: 0 auto; padding: 30px;">
-                    <div class="modal-section"><label>Issue Type & Assignee</label>
+                    <div class="modal-section">
+                        <label>Issue Type & Assignee</label>
                         <div class="modal-date-row" style="display: flex; gap: 10px;">
                             <select id="backlogViewType" class="glass-input-field"></select>
                             <select id="backlogViewAssignee" class="glass-input-field"></select>
