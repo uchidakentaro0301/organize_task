@@ -1,6 +1,5 @@
 <?php
 require 'db.php'; 
-// セッションが開始されていない場合は開始
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 ?>
 <!DOCTYPE html>
@@ -10,70 +9,15 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🚙☁ 👀 My little Backlog</title>
     <link rel="icon" href="data:,">
+    
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/board.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/dashboard_layout.css"> <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-
-    <script>
-    function handleCredentialResponse(response) {
-        console.log("Google認証成功、サーバーへ送信中...");
-        fetch('api.php?action=login_google', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: response.credential })
-        })
-        .then(res => {
-            if (!res.ok) throw new Error('Network response was not ok');
-            return res.json();
-        })
-        .then(data => {
-            if (data.success) {
-                console.log("ログイン成功、画面をリロードします。");
-                window.location.reload(); 
-            } else {
-                alert('ログインに失敗しました: ' + (data.message || '不明なエラー'));
-            }
-        })
-        .catch(err => {
-            console.error('Login error:', err);
-            alert('サーバーとの通信に失敗しました。');
-        });
-    }
-
-    // サイドバー切り替え等の基本関数
-    function toggleSidebar() { document.getElementById('sidebar')?.classList.toggle('collapsed'); }
-    function toggleSlackSettings() {
-        const content = document.getElementById('slackContent');
-        if (content) content.style.display = (content.style.display === 'none' || content.style.display === '') ? 'block' : 'none';
-    }
-    </script>
-
-    <style>
-        /* 期間別実績リスト用追加スタイル */
-        .period-tab-container {
-            display: flex;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            width: 100%;
-        }
-        .period-tab {
-            flex: 1; padding: 12px; border: none; background: none; cursor: pointer;
-            font-size: 0.8rem; font-weight: bold; color: #94a3b8; transition: 0.3s;
-        }
-        .period-tab.active {
-            color: #6366f1; border-bottom: 2px solid #6366f1; background: rgba(99, 102, 241, 0.05);
-        }
-        .completed-task-container {
-            width: 100%; max-height: 280px; overflow-y: auto;
-        }
-        .completed-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 20px; border-bottom: 1px solid rgba(0, 0, 0, 0.03); font-size: 0.85rem;
-        }
-        .completed-name { color: #334155; text-align: left; flex: 1; font-weight: 500; }
-        .completed-time { font-weight: bold; color: #6366f1; margin-left: 15px; font-family: monospace; }
-    </style>
-</head>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    
+    <script src="js/auth.js"></script> </head>
 <body>
 
 <?php if (!isset($_SESSION['user_id'])): ?>
@@ -139,9 +83,10 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
         </aside>
 
         <main class="main-content">
-        <div id="cytech_usersView" class="view">
-            <?php include 'cytech_users.php'; ?>
-        </div>
+            <div id="cytech_usersView" class="view">
+                <?php include 'cytech_users.php'; ?>
+            </div>
+            
             <div id="boardView" class="view active">
                 <div class="top-action-area">
                     <button type="button" class="open-modal-btn" onclick="openTaskModal()"><span class="icon">＋</span> 新しいタスクを追加</button>
@@ -160,19 +105,19 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
             <div id="dashboardView" class="view">
                 <div class="dashboard-header"><h1>ダッシュボード</h1></div>
                 <div class="dashboard-grid">
-                    <div class="stat-card">
+                    <div class="stat-card" id="card-total">
                         <div class="stat-header"><h3>総タスク数</h3></div>
                         <div class="stat-body"><div id="total-count" class="stat-value">0</div></div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" id="card-density">
                         <div class="stat-header"><h3>作業密度 (平均)</h3></div>
                         <div class="stat-body"><div id="average-task-time" class="stat-value" style="font-size: 1.8rem;">0s</div></div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" id="card-remaining">
                         <div class="stat-header"><h3>残タスク</h3></div>
                         <div class="stat-body"><div id="remaining-count" class="stat-value">0</div></div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" id="card-progress">
                         <div class="stat-header">
                             <h3>完了率</h3>
                             <div class="custom-select-wrapper">
@@ -185,18 +130,18 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                         </div>
                         <div class="stat-body"><div id="progress-rate" class="stat-value">0%</div></div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" id="card-overdue">
                         <div class="stat-header"><h3>期限切れ</h3></div>
                         <div class="stat-body"><div id="overdue-count" class="stat-value">0</div></div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" id="card-ranking">
                         <div class="stat-header"><h3>時間消費ランキング</h3></div>
                         <div class="stat-body" style="padding: 10px;">
                             <div id="time-ranking-container" class="placeholder-box"></div>
                         </div>
                     </div>
 
-                    <div class="stat-card wide">
+                    <div class="stat-card wide" id="card-completed">
                         <div class="stat-header"><h3>🏁 完了タスク実績詳細</h3></div>
                         <div class="stat-body" style="padding: 0; align-items: stretch;">
                             <div class="period-tab-container">
@@ -204,12 +149,11 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                                 <button onclick="switchPeriodList('monthly')" class="period-tab" id="tab-monthly">当月</button>
                                 <button onclick="switchPeriodList('quarterly')" class="period-tab" id="tab-quarterly">四半期</button>
                             </div>
-                            <div id="period-completed-list" class="completed-task-container">
-                                </div>
+                            <div id="period-completed-list" class="completed-task-container"></div>
                         </div>
                     </div>
 
-                    <div class="stat-card wide">
+                    <div class="stat-card wide" id="card-distribution">
                         <div class="stat-header"><h3>ステータス配分状況</h3></div>
                         <div class="stat-body">
                             <div id="status-distribution-container" class="placeholder-box"></div>
@@ -249,14 +193,12 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalTaskId">
-                
                 <div id="modalBacklogArea" class="modal-section" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display:none;">
                     <div class="modal-date-row" style="display: flex; gap: 10px;">
                         <select id="modalBacklogType" class="glass-input-field"></select>
                         <select id="modalBacklogAssignee" class="glass-input-field"></select>
                     </div>
                 </div>
-                
                 <div class="modal-section">
                     <label>Task Name</label>
                     <input type="text" id="taskInput" class="glass-input-field">
@@ -283,7 +225,8 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
     <script src="js/script.js"></script>
     <script src="js/board.js"></script>
     <script src="js/dashboard.js"></script>
-<?php endif; ?>
+    <script src="js/dashboard_init.js"></script> <?php endif; ?>
+
 <svg style="display: none;">
   <defs>
     <filter id="glass-distortion">
