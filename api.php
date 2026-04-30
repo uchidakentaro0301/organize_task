@@ -134,6 +134,19 @@ switch ($action) {
         echo json_encode(['success' => true]);
         break;
 
+    case 'fetch_cytech_users':
+        $stmt = $pdo->prepare("SELECT * FROM cytech_users WHERE user_id = ? ORDER BY id DESC");
+        $stmt->execute([$user_id]);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+        break;
+        
+    case 'add_cytech_user':
+        $d = json_decode(file_get_contents('php://input'), true);
+        $stmt = $pdo->prepare("INSERT INTO cytech_users (user_id, username, step, count, status, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$user_id, $d['username'], $d['step'], $d['count'], $d['status'], $d['startDate'], $d['endDate']]);
+        echo json_encode(['success' => true]);
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;

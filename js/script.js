@@ -213,3 +213,62 @@ function toggleSlackLock() { document.getElementById('slackUrl').disabled = !doc
 function saveSlackUrl() { localStorage.setItem('slackWebhookUrl', document.getElementById('slackUrl').value); toggleSlackLock(); }
 function confirmReset() { if (confirm("全リセットしますか？")) { tasks = []; loadTasksFromServer(); } }
 
+// モーダルを開く
+function openCyTechUserModal() {
+  document.getElementById('cytechUserModal').classList.add('active');
+  document.getElementById('cyUserId').value = "";
+  document.getElementById('cyUsername').value = "";
+  // ...他の項目もリセット
+}
+
+function closeCyTechUserModal() {
+  document.getElementById('cytechUserModal').classList.remove('active');
+}
+
+// データの読み込み
+async function loadCyTechUsers() {
+  const res = await fetch('api.php?action=fetch_cytech_users');
+  const users = await res.json();
+  const tbody = document.getElementById('cytechUserTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = users.map(u => `
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+          <td style="padding: 12px;">${escapeHTML(u.username)}</td>
+          <td style="padding: 12px;">${escapeHTML(u.step)}</td>
+          <td style="padding: 12px;">${u.count}</td>
+          <td style="padding: 12px;">
+              <select onchange="updateCyStatus(${u.id}, this.value)" class="glass-input" style="background: ${u.status==='done'?'#10b981':'#ef4444'};">
+                  <option value="doing" ${u.status==='doing'?'selected':''}>処理中</option>
+                  <option value="done" ${u.status==='done'?'selected':''}>完了</option>
+              </select>
+          </td>
+          <td style="padding: 12px;">${u.start_date || '-'}</td>
+          <td style="padding: 12px;">${u.end_date || '-'}</td>
+          <td style="padding: 12px;"><button onclick="deleteCyUser(${u.id})" class="glass-icon-btn" style="color:#f87171;">削除</button></td>
+      </tr>
+  `).join('');
+}
+
+// 保存処理
+async function saveCyTechUser() {
+  const data = {
+      id: document.getElementById('cyUserId').value,
+      username: document.getElementById('cyUsername').value,
+      step: document.getElementById('cyStep').value,
+      count: document.getElementById('cyCount').value,
+      status: document.getElementById('cyStatus').value,
+      startDate: document.getElementById('cyStartDate').value,
+      endDate: document.getElementById('cyEndDate').value
+  };
+  await fetch('api.php?action=add_cytech_user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+  });
+  closeCyTechUserModal();
+  loadCyTechUsers();
+}
+
+// showView関数の中に追記
+if (viewName === 'cytech_users') loadCyTechUsers();
