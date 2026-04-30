@@ -222,7 +222,7 @@ function render() {
                 folder.innerHTML = `
                     <div class="category-folder-header" onclick="this.nextElementSibling.style.display = (this.nextElementSibling.style.display === 'none' ? 'block' : 'none')">
                         <span>📂 ${escapeHTML(catName)} (${grouped[catName].length})</span>
-                        <span style="font-size: 0.7rem;">クリックで開閉</span>
+                        <span style="font-size: 0.7rem;">Touch</span>
                     </div>
                     <div class="category-folder-content">
                         ${taskCardsHtml}

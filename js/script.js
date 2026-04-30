@@ -35,21 +35,62 @@ async function loadTasksFromServer() {
   } catch (e) { console.error("データ取得エラー:", e); }
 }
 
+/**
+ * 画面切り替え制御
+ */
 function showView(viewName) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  // すべてのビューを非表示にする
+  const views = document.querySelectorAll('.view');
+  views.forEach(view => {
+      view.classList.remove('active');
+  });
+
+  // すべてのナビゲーションアイテムから active クラスを削除
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(item => {
+      item.classList.remove('active');
+  });
+
+  // 対象のビューを表示
   const targetView = document.getElementById(viewName + 'View');
-  if (targetView) targetView.classList.add('active');
+  if (targetView) {
+      targetView.classList.add('active');
+  }
 
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const navItem = document.getElementById('nav-' + viewName);
-  if (navItem) navItem.classList.add('active');
+  // 対象のナビボタンをアクティブ化
+  const targetNav = document.getElementById('nav-' + viewName);
+  if (targetNav) {
+      targetNav.classList.add('active');
+  }
 
-  // ビュー切り替え時のデータロード
-  if (viewName === 'recurring') loadRecurringTasks();
-  if (viewName === 'backlog') loadBacklogMasterData();
-  if (viewName === 'dashboard' && typeof updateDashboard === 'function') updateDashboard();
-  if (viewName === 'cytech_users') loadCyTechUsers(); // CyTechユーザー一覧をロード
+  // 各ビューに応じた初期化処理
+  switch (viewName) {
+      case 'board':
+          if (typeof loadTasks === 'function') loadTasks();
+          break;
+      case 'dashboard':
+          if (typeof initDashboard === 'function') initDashboard();
+          break;
+      case 'cytech_users':
+          if (typeof loadCyTechUsers === 'function') loadCyTechUsers();
+          break;
+      case 'free_book':
+          // メモ帳のデータをロード
+          if (typeof loadFreeNote === 'function') {
+              loadFreeNote();
+          }
+          break;
+  }
 }
+
+/**
+* 初期表示
+*/
+document.addEventListener('DOMContentLoaded', () => {
+  // URLのハッシュ等で初期表示を変える場合はここに記述
+  // デフォルトはボードを表示
+  showView('board');
+});
 
 /* ==========================================================================
    定期タスク管理

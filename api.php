@@ -215,6 +215,22 @@ switch ($action) {
         echo json_encode(['success' => true]);
         break;
 
+    // --- free book管理 ---
+    case 'fetch_free_note':
+        $stmt = $pdo->prepare("SELECT content FROM free_notes WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $note = $stmt->fetch(PDO::FETCH_ASSOC);
+        echo json_encode(['content' => $note ? $note['content'] : '']);
+        break;
+    
+    case 'save_free_note':
+        $d = json_decode(file_get_contents('php://input'), true);
+        // ON DUPLICATE KEY UPDATE を使用して存在しなければ挿入、あれば更新
+        $stmt = $pdo->prepare("INSERT INTO free_notes (user_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?");
+        $stmt->execute([$user_id, $d['content'], $d['content']]);
+        echo json_encode(['success' => true]);
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;
