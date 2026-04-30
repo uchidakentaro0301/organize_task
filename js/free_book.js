@@ -1,23 +1,34 @@
 /**
- * free book (メモ帳) の制御
+ * free book (メモ帳) Glassmorphism Edition
  */
 let saveTimeout = null;
 
+// 装飾コマンドの実行
+function execCommand(command) {
+    document.execCommand(command, false, null);
+    document.getElementById('freeNoteArea').focus();
+    handleInput(); 
+}
+
 // データの読み込み
 async function loadFreeNote() {
+    const area = document.getElementById('freeNoteArea');
     try {
         const res = await fetch('api.php?action=fetch_free_note');
         const data = await res.json();
-        document.getElementById('freeNoteArea').value = data.content || "";
-    } catch (e) { console.error("メモ取得エラー:", e); }
+        area.innerHTML = data.content || "";
+    } catch (e) { 
+        console.error("メモ取得エラー:", e); 
+    }
 }
 
 // データの保存
 async function saveFreeNote() {
-    const content = document.getElementById('freeNoteArea').value;
+    const content = document.getElementById('freeNoteArea').innerHTML;
     const statusEl = document.getElementById('save-status');
     
-    statusEl.innerText = "保存中...";
+    statusEl.style.color = "rgba(255, 255, 255, 0.4)";
+    statusEl.innerText = "Saving...";
     
     try {
         await fetch('api.php?action=save_free_note', {
@@ -25,20 +36,23 @@ async function saveFreeNote() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content: content })
         });
-        statusEl.innerText = "変更を保存しました";
+        statusEl.innerText = "Saved to cloud";
+        statusEl.style.color = "rgba(100, 255, 218, 0.7)"; // 保存完了時は少し青緑っぽく
     } catch (e) {
-        statusEl.innerText = "保存に失敗しました";
+        statusEl.innerText = "Save failed";
+        statusEl.style.color = "#ff5252";
     }
 }
 
-// 入力時のイベントリスナー
-document.getElementById('freeNoteArea').addEventListener('input', () => {
-    document.getElementById('save-status').innerText = "入力中...";
+// 入力時のハンドリング
+function handleInput() {
+    const statusEl = document.getElementById('save-status');
+    statusEl.innerText = "Typing...";
+    statusEl.style.color = "rgba(255, 255, 255, 0.6)";
     
-    // 前のタイマーをクリアして、入力が止まった500ms後に保存
     clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(saveFreeNote, 500);
-});
+    saveTimeout = setTimeout(saveFreeNote, 1000); // 入力停止から1秒後に保存
+}
 
 // 初期ロード
 loadFreeNote();
