@@ -168,6 +168,30 @@ switch ($action) {
         echo json_encode(['success' => true]);
         break;
 
+    case 'get_status_stats':
+        $user_id = $_SESSION['user_id'];
+        // ステータスごとの件数と合計時間を集計
+        $sql = "SELECT status, COUNT(*) as count, SUM(total_time) as total_time FROM tasks WHERE user_id = ? GROUP BY status";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$user_id]);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // フロントエンドで扱いやすいように初期化
+        $stats = [
+            'todo' => 0, 'doing' => 0, 'done' => 0, 'total' => 0,
+            'todo_time' => 0, 'doing_time' => 0, 'done_time' => 0
+        ];
+        
+        foreach ($results as $row) {
+            $status = $row['status'];
+            $stats[$status] = (int)$row['count'];
+            $stats[$status . '_time'] = (int)($row['total_time'] ?? 0);
+            $stats['total'] += (int)$row['count'];
+        }
+        
+        echo json_encode(['success' => true, 'data' => $stats]);
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;

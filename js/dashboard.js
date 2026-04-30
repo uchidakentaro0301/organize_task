@@ -1,7 +1,3 @@
-/**
- * dashboard.js - 集計・分析ロジック (期間別詳細実績・エラー修正版)
- */
-
 let currentPeriodView = 'weekly'; // デフォルトの期間表示設定
 
 /**
@@ -68,8 +64,7 @@ function updateAverageWorkDensity(doneTasks) {
 }
 
 /**
- * 【重要：エラー修正箇所】 期間表示の切り替え関数
- * index.phpのonclick="switchPeriodList(...)"から呼び出されます
+ * 期間表示の切り替え関数
  */
 function switchPeriodList(period) {
     currentPeriodView = period;
@@ -133,7 +128,7 @@ function renderPeriodTasks() {
 }
 
 /**
- * ステータス配分状況の描画
+ * ステータス配分状況の描画（「進行中」「完了」の合計時間表示を統合）
  */
 async function updateStatusDistribution() {
     const container = document.getElementById('status-distribution-container');
@@ -145,6 +140,15 @@ async function updateStatusDistribution() {
 
         if (result.success) {
             const data = result.data;
+
+            // --- 追加：ステータス別の合計時間を反映 ---
+            const doingTimeEl = document.getElementById('doing-total-time');
+            if (doingTimeEl) doingTimeEl.innerText = formatTaskTime(data.doing_time || 0);
+
+            const doneTimeEl = document.getElementById('done-total-time');
+            if (doneTimeEl) doneTimeEl.innerText = formatTaskTime(data.done_time || 0);
+            // ----------------------------------------
+
             const total = data.total;
             const getPercent = (count) => total > 0 ? Math.round((count / total) * 100) : 0;
 

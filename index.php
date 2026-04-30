@@ -159,6 +159,14 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                             <div id="status-distribution-container" class="placeholder-box"></div>
                         </div>
                     </div>
+                    <div class="stat-card" id="card-doing-time">
+                        <div class="stat-header"><h3>進行中 合計時間</h3></div>
+                        <div class="stat-body"><div id="doing-total-time" class="stat-value" style="font-size: 1.8rem;">0s</div></div>
+                    </div>
+                    <div class="stat-card" id="card-done-time">
+                        <div class="stat-header"><h3>完了 合計時間</h3></div>
+                        <div class="stat-body"><div id="done-total-time" class="stat-value" style="font-size: 1.8rem;">0s</div></div>
+                    </div>
                 </div>
             </div>
 
