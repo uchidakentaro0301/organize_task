@@ -105,7 +105,7 @@ function renderPeriodTasks() {
             monday.setHours(0,0,0,0);
             return taskDate >= monday;
         } else if (currentPeriodView === 'monthly') {
-            // 今月
+            // 当月
             return taskDate.getMonth() === now.getMonth() && taskDate.getFullYear() === now.getFullYear();
         } else if (currentPeriodView === 'quarterly') {
             // 今四半期
@@ -197,7 +197,7 @@ function updateTimeRanking() {
         html += `
             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.03); padding-bottom: 4px;">
                 <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%; color: #475569;">
-                    <span style="color: #6366f1; font-weight: bold; margin-right: 4px;">${index + 1}位</span>
+                    <span style="color: #6366f1; font-weight: bold; margin-right: 4px;">${index + 1}</span>
                     <span>${escapeHTML(t.text)}</span>
                 </div>
                 <div style="font-weight: bold; color: #1e1b4b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">

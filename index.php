@@ -184,7 +184,7 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                         <div class="stat-body"><div id="overdue-count" class="stat-value">0</div></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-header"><h3>時間消費分析</h3></div>
+                        <div class="stat-header"><h3>時間消費ランキング</h3></div>
                         <div class="stat-body" style="padding: 10px;">
                             <div id="time-ranking-container" class="placeholder-box"></div>
                         </div>
@@ -195,7 +195,7 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                         <div class="stat-body" style="padding: 0; align-items: stretch;">
                             <div class="period-tab-container">
                                 <button onclick="switchPeriodList('weekly')" class="period-tab active" id="tab-weekly">今週</button>
-                                <button onclick="switchPeriodList('monthly')" class="period-tab" id="tab-monthly">今月</button>
+                                <button onclick="switchPeriodList('monthly')" class="period-tab" id="tab-monthly">当月</button>
                                 <button onclick="switchPeriodList('quarterly')" class="period-tab" id="tab-quarterly">四半期</button>
                             </div>
                             <div id="period-completed-list" class="completed-task-container">
