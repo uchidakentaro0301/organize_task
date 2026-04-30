@@ -12,7 +12,7 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/board.css">
-
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <script>

@@ -1,7 +1,54 @@
-/**
- * board.js - Liquid Glass UI & Compact Timer Update
- */
 let activeTimers = {};
+let pipVideo = null;
+let pipCanvas = null;
+
+/**
+ * PiP用の隠し要素を初期化する
+ */
+function initPipElements() {
+    if (pipVideo) return;
+    // 映像を流すためのビデオ要素
+    pipVideo = document.createElement('video');
+    pipVideo.muted = true;
+    pipVideo.autoplay = true;
+    
+    // 描画用のCanvas要素
+    pipCanvas = document.createElement('canvas');
+    pipCanvas.width = 400;  // PiPウィンドウの解像度
+    pipCanvas.height = 200;
+}
+
+/**
+ * Canvasに現在のタイマー状態を描画してPiP映像を更新する
+ */
+function updatePipCanvas(timeText, taskTitle) {
+    if (!pipCanvas) return;
+    const ctx = pipCanvas.getContext('2d');
+    
+    // 背景の描画 (深みのあるネイビー)
+    ctx.fillStyle = '#1e1b4b'; 
+    ctx.fillRect(0, 0, pipCanvas.width, pipCanvas.height);
+    
+    // タスク名の描画
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '18px sans-serif';
+    ctx.fillText(taskTitle.substring(0, 25), 30, 50);
+    
+    // タイマーの描画 (デジタルフォント風)
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 64px sans-serif'; // フォントが読み込まれていない場合を考慮
+    ctx.fillText(timeText, 30, 130);
+    
+    // ステータス表示
+    ctx.fillStyle = '#10b981';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText('● RECORDING', 30, 170);
+
+    // Canvasの内容をVideo要素のストリームとして設定
+    if (pipVideo.srcObject === null) {
+        pipVideo.srcObject = pipCanvas.captureStream(10); // 10 FPS
+    }
+}
 
 // タスクの追加・更新
 async function addTask() {
@@ -64,7 +111,7 @@ function openEditModal(id) {
     submitBtn.onclick = addTask; 
 }
 
-// 描画関数 (Liquid Glass UI 適用版)
+// 描画関数
 function render() {
     const columns = ['todo', 'doing', 'done'];
     columns.forEach(status => {
@@ -140,38 +187,72 @@ async function deleteTask(id) {
     loadTasksFromServer();
 }
 
-// 秒フォーマット (コンパクト化)
+// 秒フォーマット
 function formatSeconds(s) {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     const sec = s % 60;
     const pad = (num) => String(num).padStart(2, '0');
-    return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+    return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
 }
 
+/**
+ * タイマー開始（PiP起動を含む）
+ */
 function startTaskTimer(id) {
     if (activeTimers[id]) return;
+    
+    initPipElements(); // PiP要素の初期化
+
     const task = tasks.find(t => t.id == id);
     let currentTime = parseInt(task.totalTime || 0);
+    
     document.getElementById(`start-btn-${id}`).disabled = true;
     document.getElementById(`stop-btn-${id}`).disabled = false;
+
+    // PiPの起動（ユーザーのクリックイベント内で実行する必要があります）
+    pipVideo.play().then(() => {
+        pipVideo.requestPictureInPicture().catch(err => {
+            console.warn("PiP起動に失敗しました（ブラウザ設定など）:", err);
+        });
+    });
+
     activeTimers[id] = setInterval(() => {
         currentTime++;
-        document.getElementById(`display-time-${id}`).innerText = formatSeconds(currentTime);
+        const timeText = formatSeconds(currentTime);
+        
+        // 画面上の表示を更新
+        const timeDisplay = document.getElementById(`display-time-${id}`);
+        if (timeDisplay) timeDisplay.innerText = timeText;
+        
+        // PiPの映像（Canvas）を更新
+        updatePipCanvas(timeText, task.text);
     }, 1000);
 }
 
+/**
+ * タイマー停止（PiP終了を含む）
+ */
 async function stopTaskTimer(id) {
     if (!activeTimers[id]) return;
     clearInterval(activeTimers[id]);
     delete activeTimers[id];
+    
+    // PiPを終了
+    if (document.pictureInPictureElement) {
+        document.exitPictureInPicture().catch(() => {});
+    }
+    
     await saveTimerToDB(id);
     document.getElementById(`start-btn-${id}`).disabled = false;
     document.getElementById(`stop-btn-${id}`).disabled = true;
 }
 
 async function saveTimerToDB(id) {
-    const displayStr = document.getElementById(`display-time-${id}`).innerText;
+    const displayEl = document.getElementById(`display-time-${id}`);
+    if (!displayEl) return;
+    
+    const displayStr = displayEl.innerText;
     let totalSeconds = 0;
     const parts = displayStr.split(':').map(Number);
     
@@ -186,6 +267,7 @@ async function saveTimerToDB(id) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: id, totalTime: totalSeconds })
     });
+    
     const idx = tasks.findIndex(t => t.id == id);
     if (idx !== -1) tasks[idx].totalTime = totalSeconds;
 }
@@ -228,7 +310,6 @@ function handleModalTemplateChange() {
 function openTemplateCreateMode() {
     openTaskModal(false);
     document.getElementById('modalTitle').innerText = "新規テンプレート作成";
-    document.getElementById('saveTemplateBtn').style.display = "none";
     document.getElementById('submitBtn').innerText = "テンプレートを保存する";
     document.getElementById('submitBtn').onclick = async function() {
         const name = prompt("テンプレート名を入力してください");
