@@ -189,6 +189,12 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                             <div id="status-distribution-container" class="placeholder-box"></div>
                         </div>
                     </div>
+                    <div class="stat-card" id="card-category-distribution">
+                    <div class="stat-header"><h3>カテゴリー別分布</h3></div>
+                        <div class="stat-body">
+                            <div id="category-distribution-container" style="width: 100%;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

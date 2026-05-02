@@ -1,5 +1,3 @@
-let currentPeriodView = 'weekly'; // デフォルトの期間表示設定
-
 /**
  * ダッシュボード全体の更新
  */
@@ -39,6 +37,7 @@ async function updateDashboard() {
 
     // 4. 分析データの更新
     await updateStatusDistribution();
+    await updateCategoryDistribution(); // [修正] カテゴリー統計の更新処理を追加
     updateTimeRanking();
     renderPeriodTasks(); // 期間別実績リストの描画
 }
@@ -79,7 +78,8 @@ function switchPeriodList(period) {
 }
 
 /**
- * 期間別のタスクリストを描画
+ * 期間別のタスクリストを描画（カテゴリー別にグループ化）
+ * [修正] 完了タスクをカテゴリーごとに整理して表示するように変更
  */
 function renderPeriodTasks() {
     const container = document.getElementById('period-completed-list');
@@ -93,19 +93,16 @@ function renderPeriodTasks() {
         const taskDate = new Date(t.endDate);
         
         if (currentPeriodView === 'weekly') {
-            // 今週（月曜始まり）
             const day = now.getDay() || 7;
             const monday = new Date(now);
             monday.setDate(now.getDate() - day + 1);
             monday.setHours(0,0,0,0);
             return taskDate >= monday;
         } else if (currentPeriodView === 'monthly') {
-            // 当月
             return taskDate.getMonth() === now.getMonth() && taskDate.getFullYear() === now.getFullYear();
         } else if (currentPeriodView === 'quarterly') {
-            // 今四半期
             const currentQuarter = Math.floor(now.getMonth() / 3);
-            const taskQuarter = Math.floor(taskDate.getMonth() / 3); // typo: getMonthに修正
+            const taskQuarter = Math.floor(taskDate.getMonth() / 3);
             return currentQuarter === taskQuarter && taskDate.getFullYear() === now.getFullYear();
         }
         return false;
@@ -116,19 +113,39 @@ function renderPeriodTasks() {
         return;
     }
 
-    // ソート（新しい順）
-    filtered.sort((a, b) => new Date(b.endDate) - new Date(a.endDate));
-    
-    container.innerHTML = filtered.map(t => `
-        <div class="completed-item">
-            <span class="completed-name">${escapeHTML(t.text)}</span>
-            <span class="completed-time">${formatTaskTime(t.totalTime || 0)}</span>
-        </div>
-    `).join('');
+    // カテゴリー別にグループ化
+    const grouped = {};
+    filtered.forEach(task => {
+        const catName = task.categoryName || '未分類';
+        if (!grouped[catName]) grouped[catName] = [];
+        grouped[catName].push(task);
+    });
+
+    let html = '';
+    for (const catName in grouped) {
+        grouped[catName].sort((a, b) => new Date(b.endDate) - new Date(a.endDate));
+        
+        html += `
+            <div class="category-folder" style="margin: 10px; border: 1px solid rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden;">
+                <div style="background: rgba(0,0,0,0.03); color: #475569; padding: 10px 15px; font-size: 0.8rem; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                    📂 ${escapeHTML(catName)} (${grouped[catName].length} 件)
+                </div>
+                <div class="category-folder-content">
+                    ${grouped[catName].map(t => `
+                        <div class="completed-item">
+                            <span class="completed-name">${escapeHTML(t.text)}</span>
+                            <span class="completed-time">${formatTaskTime(t.totalTime || 0)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
 }
 
 /**
- * ステータス配分状況の描画（「進行中」「完了」の合計時間表示を含む）
+ * ステータス配分状況の描画
  */
 async function updateStatusDistribution() {
     const container = document.getElementById('status-distribution-container');
@@ -141,7 +158,6 @@ async function updateStatusDistribution() {
         if (result.success) {
             const data = result.data;
 
-            // ステータス別の合計時間を反映
             const doingTimeEl = document.getElementById('doing-total-time');
             if (doingTimeEl) doingTimeEl.innerText = formatTaskTime(data.doing_time || 0);
 
@@ -176,6 +192,49 @@ async function updateStatusDistribution() {
             container.innerHTML = html;
         }
     } catch (e) { console.error("統計取得エラー:", e); }
+}
+
+/**
+ * カテゴリー別分布の描画 [新規実装]
+ */
+async function updateCategoryDistribution() {
+    const container = document.getElementById('category-distribution-container');
+    if (!container) return;
+
+    try {
+        const response = await fetch('api.php?action=get_category_stats');
+        const result = await response.json();
+
+        if (result.success) {
+            const data = result.data;
+            const total = data.reduce((sum, item) => sum + parseInt(item.count), 0);
+            
+            let html = '<div style="width: 100%; padding: 10px;">';
+            if (data.length === 0) {
+                html += '<div style="text-align:center; padding:15px; color:#94a3b8; font-size:0.75rem;">カテゴリーデータがありません</div>';
+            } else {
+                data.forEach(item => {
+                    const percent = total > 0 ? Math.round((item.count / total) * 100) : 0;
+                    html += `
+                        <div style="margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 5px; color: #475569;">
+                                <span><strong>${escapeHTML(item.name)}</strong></span>
+                                <span>${item.count} 件 (${percent}%)</span>
+                            </div>
+                            <div style="background: #e2e8f0; height: 12px; border-radius: 6px; overflow: hidden; width: 100%;">
+                                <div style="background: #6366f1; width: ${percent}%; height: 100%; transition: width 0.8s ease;"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        }
+    } catch (e) { 
+        console.error("カテゴリー統計取得エラー:", e); 
+        container.innerHTML = '<div style="padding:15px; color:#ef4444; font-size:0.75rem;">データの取得に失敗しました</div>';
+    }
 }
 
 /**
@@ -243,7 +302,6 @@ function escapeHTML(str) {
  * ダッシュボードの内容をCSV出力する
  */
 function exportDashboardToCSV() {
-    // データ収集
     const stats = [
         ["ダッシュボード統計レポート", new Date().toLocaleString()],
         [],
@@ -257,7 +315,6 @@ function exportDashboardToCSV() {
         ["完了 合計時間", document.getElementById('done-total-time')?.innerText || "0s"]
     ];
 
-    // ステータス配分（DOMから解析して追加）
     stats.push([], ["ステータス内訳", "件数"]);
     const distributionItems = document.querySelectorAll('#status-distribution-container > div > div');
     distributionItems.forEach(item => {
@@ -267,12 +324,10 @@ function exportDashboardToCSV() {
         }
     });
 
-    // CSV文字列の生成
     const csvContent = stats.map(row => 
         row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")
     ).join("\n");
 
-    // ダウンロード処理 (UTF-8 with BOM)
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
     const blob = new Blob([bom, csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
