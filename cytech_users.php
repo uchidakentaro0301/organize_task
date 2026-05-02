@@ -1,5 +1,65 @@
-<div class="dashboard-header">
-    <h1>CyTechユーザー管理</h1>
+<div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <div style="display: flex; align-items: center; gap: 20px;">
+        <h1 style="margin: 0;">CyTech業務管理</h1>
+        
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="open-modal-btn" 
+                    onclick="window.open('https://engineer.cytech.online/admin/login', '_blank')" 
+                    style="font-size: 0.75rem; height: 34px; padding: 0 18px; 
+                           background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); 
+                           border-radius: 10px; 
+                           box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+                           border: 1px solid rgba(255, 255, 255, 0.1);
+                           transition: all 0.3s ease;">
+                <span class="icon" style="margin-right: 6px;">💬</span> 旧CyTech（チャット）
+            </button>
+
+            <button type="button" class="open-modal-btn" 
+                    onclick="window.open('https://admin.cytech.online/login', '_blank')" 
+                    style="font-size: 0.75rem; height: 34px; padding: 0 18px; 
+                           background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%); 
+                           border-radius: 10px; 
+                           box-shadow: 0 4px 15px rgba(8, 145, 178, 0.4);
+                           border: 1px solid rgba(255, 255, 255, 0.1);
+                           transition: all 0.3s ease;">
+                <span class="icon" style="margin-right: 6px;">⚙️</span> 旧CyTech管理画面
+            </button>
+
+            <button type="button" class="open-modal-btn" 
+                    onclick="window.open('https://user.cytech.online/home#slide-1', '_blank')" 
+                    style="font-size: 0.75rem; height: 34px; padding: 0 18px; 
+                           background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+                           border-radius: 10px; 
+                           box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+                           border: 1px solid rgba(255, 255, 255, 0.1);
+                           transition: all 0.3s ease;">
+                <span class="icon" style="margin-right: 6px;">👤</span> 旧CyTech（ユーザー）
+            </button>
+
+            <button type="button" class="open-modal-btn" 
+                    onclick="window.open('https://tng-cytech-dashboard.com/home', '_blank')" 
+                    style="font-size: 0.75rem; height: 34px; padding: 0 18px; 
+                           background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); 
+                           border-radius: 10px; 
+                           box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+                           border: 1px solid rgba(255, 255, 255, 0.1);
+                           transition: all 0.3s ease;">
+                <span class="icon" style="margin-right: 6px;">📊</span> 新CyTech（管理画面）
+            </button>
+
+            <button type="button" class="open-modal-btn" 
+                    onclick="window.open('https://tng-cytech.com/', '_blank')" 
+                    style="font-size: 0.75rem; height: 34px; padding: 0 18px; 
+                           background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
+                           border-radius: 10px; 
+                           box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+                           border: 1px solid rgba(255, 255, 255, 0.1);
+                           transition: all 0.3s ease;">
+                <span class="icon" style="margin-right: 6px;">🏠</span> 新CyTech（ユーザー画面）
+            </button>
+        </div>
+    </div>
+    
     <button type="button" class="open-modal-btn" onclick="openCyTechUserModal()" style="font-size: 0.8rem; height: 38px;">
         <span class="icon">＋</span> 新規ユーザー登録
     </button>
