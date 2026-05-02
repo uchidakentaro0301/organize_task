@@ -303,6 +303,56 @@ switch ($action) {
             $stmt->execute([$d['id'], $user_id]);
             echo json_encode(['success' => true]);
             break;
+        
+        // --- 機密情報パスワード認証 ---
+case 'check_confidential_status':
+    // パスワードが設定されているか、および現在のセッションで認証済みかを確認
+    $stmt = $pdo->prepare("SELECT master_password FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch();
+    
+    echo json_encode([
+        'hasPassword' => !empty($user['master_password']),
+        'isUnlocked' => isset($_SESSION['confidential_unlocked']) && $_SESSION['confidential_unlocked'] === true
+    ]);
+    break;
+
+case 'set_master_password':
+    $d = json_decode(file_get_contents('php://input'), true);
+    if (!empty($d['password'])) {
+        // パスワードをハッシュ化して保存
+        $hashed = password_hash($d['password'], PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("UPDATE users SET master_password = ? WHERE id = ?");
+        $stmt->execute([$hashed, $user_id]);
+        $_SESSION['confidential_unlocked'] = true; // 設定直後は解除状態にする
+        echo json_encode(['success' => true]);
+    }
+    break;
+
+    case 'verify_master_password':
+        $d = json_decode(file_get_contents('php://input'), true);
+        $stmt = $pdo->prepare("SELECT master_password FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $user = $stmt->fetch();
+        
+        if ($user && password_verify($d['password'], $user['master_password'])) {
+            $_SESSION['confidential_unlocked'] = true;
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'パスワードが正しくありません']);
+        }
+        break;
+
+    // 既存の fetch_confidential を修正：認証済みでない場合はデータを返さない
+    case 'fetch_confidential':
+        if (!isset($_SESSION['confidential_unlocked']) || $_SESSION['confidential_unlocked'] !== true) {
+            echo json_encode([]); // 認証前は空配列を返す
+            exit;
+        }
+        $stmt = $pdo->prepare("SELECT * FROM confidential_info WHERE user_id = ? ORDER BY id DESC");
+        $stmt->execute([$user_id]);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+        break;
 
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
