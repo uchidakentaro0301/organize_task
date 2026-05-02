@@ -1,12 +1,12 @@
 <?php
-require 'db.php'; 
+require 'db.php';
 
 header('Content-Type: application/json');
 $action = $_GET['action'] ?? '';
 $user_id = $_SESSION['user_id'] ?? null;
 
 // Backlog連携用設定
-$space_id = 'ct-academy'; 
+$space_id = 'ct-academy';
 $api_key = '4Be3aRFWc2Wxax0ewCSXZjsNiWBQ8vqyil3POfnS79W2xKSzjwdjcmJWN6so6WIO';
 $project_id = 699087;
 
@@ -128,6 +128,18 @@ switch ($action) {
         echo json_encode(['success' => true, 'data' => $stats]);
         break;
 
+    // --- カテゴリー統計 [新規追加] ---
+    case 'get_category_stats':
+        $sql = "SELECT c.name, COUNT(t.id) as count 
+                FROM categories c 
+                LEFT JOIN tasks t ON c.id = t.category_id 
+                WHERE c.user_id = ? 
+                GROUP BY c.id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$user_id]);
+        echo json_encode(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+        break;
+
     // --- Backlog連携 ---
     case 'fetch_backlog_users':
         $url = "https://{$space_id}.backlog.com/api/v2/projects/{$project_id}/users?apiKey=".urlencode($api_key);
@@ -231,6 +243,37 @@ switch ($action) {
         $stmt = $pdo->prepare("INSERT INTO free_notes (user_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?");
         $stmt->execute([$user_id, $d['content'], $d['content']]);
         echo json_encode(['success' => true]);
+        break;
+
+    // --- CyTech進捗統計 [新規追加] ---
+    case 'get_cytech_stats':
+        $today = date('Y-m-d');
+        // 今週の開始日（月曜日）を算出
+        $monday = date('Y-m-d', strtotime('monday this week'));
+        // 今月の開始日を算出
+        $month_first = date('Y-m-01');
+
+        // 今週完了数
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM cytech_users WHERE user_id = ? AND status = 'done' AND end_date >= ?");
+        $stmt->execute([$user_id, $monday]);
+        $weekDone = $stmt->fetchColumn();
+
+        // 今月完了数
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM cytech_users WHERE user_id = ? AND status = 'done' AND end_date >= ?");
+        $stmt->execute([$user_id, $month_first]);
+        $monthDone = $stmt->fetchColumn();
+
+        // 現在の処理中（doing）数
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM cytech_users WHERE user_id = ? AND status = 'doing'");
+        $stmt->execute([$user_id]);
+        $doingCount = $stmt->fetchColumn();
+
+        echo json_encode([
+            'success' => true,
+            'weekDone' => (int)$weekDone,
+            'monthDone' => (int)$monthDone,
+            'doingCount' => (int)$doingCount
+        ]);
         break;
 
     default:
