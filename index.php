@@ -95,6 +95,10 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
             <div id="free_bookView" class="view">
                 <?php include 'free_book.php'; ?>
             </div>
+
+            <div id="confidentialView" class="view">
+                <?php include 'confidential.php'; ?>
+            </div>
             
             <div id="boardView" class="view active">
                 <div class="top-action-area">

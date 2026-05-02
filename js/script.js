@@ -83,6 +83,9 @@ function showView(viewName) {
               loadFreeNote();
           }
           break;
+      case 'confidential':
+          if (typeof loadConfidentialInfo === 'function') loadConfidentialInfo();
+          break;
   }
 }
 

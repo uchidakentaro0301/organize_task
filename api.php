@@ -276,6 +276,34 @@ switch ($action) {
         ]);
         break;
 
+        // --- 機密情報管理 ---
+        case 'fetch_confidential':
+            $stmt = $pdo->prepare("SELECT * FROM confidential_info WHERE user_id = ? ORDER BY id DESC");
+            $stmt->execute([$user_id]);
+            echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+            break;
+
+        case 'add_confidential':
+            $d = json_decode(file_get_contents('php://input'), true);
+            $stmt = $pdo->prepare("INSERT INTO confidential_info (user_id, title, login_id, password, notes) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$user_id, $d['title'], $d['login_id'], $d['password'], $d['notes']]);
+            echo json_encode(['success' => true]);
+            break;
+
+        case 'edit_confidential':
+            $d = json_decode(file_get_contents('php://input'), true);
+            $stmt = $pdo->prepare("UPDATE confidential_info SET title=?, login_id=?, password=?, notes=? WHERE id=? AND user_id=?");
+            $stmt->execute([$d['title'], $d['login_id'], $d['password'], $d['notes'], $d['id'], $user_id]);
+            echo json_encode(['success' => true]);
+            break;
+
+        case 'delete_confidential':
+            $d = json_decode(file_get_contents('php://input'), true);
+            $stmt = $pdo->prepare("DELETE FROM confidential_info WHERE id=? AND user_id=?");
+            $stmt->execute([$d['id'], $user_id]);
+            echo json_encode(['success' => true]);
+            break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;
