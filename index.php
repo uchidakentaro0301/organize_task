@@ -158,6 +158,29 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                         <div class="stat-header"><h3>期限切れ</h3></div>
                         <div class="stat-body"><div id="overdue-count" class="stat-value">0</div></div>
                     </div>
+
+                    <div class="stat-card" id="card-cy-doing">
+                        <div class="stat-header" style="background: #fff1f1;"><h3>👥 CyTech 処理中</h3></div>
+                        <div class="stat-body">
+                            <div id="cy-doing-count" class="stat-value" style="color: #ef4444;">0</div>
+                            <div class="stat-subtext">現在の対応人数</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" id="card-cy-week">
+                        <div class="stat-header" style="background: #f0fdf4;"><h3>✅ CyTech 今週完了</h3></div>
+                        <div class="stat-body">
+                            <div id="cy-week-done" class="stat-value" style="color: #22c55e;">0</div>
+                            <div class="stat-subtext">月曜からの合計</div>
+                        </div>
+                    </div>
+                    <div class="stat-card" id="card-cy-month">
+                        <div class="stat-header" style="background: #f0fdfa;"><h3>🏆 CyTech 今月完了</h3></div>
+                        <div class="stat-body">
+                            <div id="cy-month-done" class="stat-value" style="color: #0d9488;">0</div>
+                            <div class="stat-subtext">1日からの合計</div>
+                        </div>
+                    </div>
+
                     <div class="stat-card" id="card-doing-time">
                         <div class="stat-header"><h3>進行中 合計時間</h3></div>
                         <div class="stat-body"><div id="doing-total-time" class="stat-value" style="font-size: 1.8rem;">0s</div></div>
@@ -172,8 +195,9 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                             <div id="time-ranking-container" class="placeholder-box"></div>
                         </div>
                     </div>
+
                     <div class="stat-card wide" id="card-completed">
-                        <div class="stat-header"><h3>🏁 完了タスク実績詳細</h3></div>
+                        <div class="stat-header"><h3>🏁 完了タスク実績詳細 (カテゴリー別)</h3></div>
                         <div class="stat-body" style="padding: 0; align-items: stretch;">
                             <div class="period-tab-container">
                                 <button onclick="switchPeriodList('weekly')" class="period-tab active" id="tab-weekly">今週</button>
@@ -186,11 +210,11 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                     <div class="stat-card wide" id="card-distribution">
                         <div class="stat-header"><h3>ステータス配分状況</h3></div>
                         <div class="stat-body">
-                            <div id="status-distribution-container" class="placeholder-box"></div>
+                            <div id="status-distribution-container" class="placeholder-box" style="width: 100%;"></div>
                         </div>
                     </div>
-                    <div class="stat-card" id="card-category-distribution">
-                    <div class="stat-header"><h3>カテゴリー別分布</h3></div>
+                    <div class="stat-card wide" id="card-category-distribution">
+                        <div class="stat-header"><h3>カテゴリー別分布</h3></div>
                         <div class="stat-body">
                             <div id="category-distribution-container" style="width: 100%;"></div>
                         </div>
