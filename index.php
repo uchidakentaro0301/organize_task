@@ -67,6 +67,9 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                 <button type="button" onclick="showView('free_book')" id="nav-free_book" class="nav-item">
                     <span class="icon">📖</span> <span class="nav-text">free book</span>
                 </button>
+                <button type="button" onclick="showView('confidential')" id="nav-confidential" class="nav-item">
+                    <span class="icon">🔒</span> <span class="nav-text">機密情報</span>
+                </button>
             </nav>
             <div class="sidebar-footer">
                 <div class="glass-collapsible">
@@ -350,6 +353,7 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
     <script src="js/board.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/dashboard_init.js"></script> 
+    <script src="js/confidential.js"></script>
 <?php endif; ?>
 
 <svg style="display: none;">
