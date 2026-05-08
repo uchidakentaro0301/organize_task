@@ -1,3 +1,4 @@
+let cytechUsersData = [];
 let tasks = []; 
 let lastAutoSentHour = null;
 
@@ -165,11 +166,15 @@ async function deleteRecurringTask(id) {
 async function loadCyTechUsers() {
   const res = await fetch('api.php?action=fetch_cytech_users');
   const users = await res.json();
+  cytechUsersData = users; // グローバル変数に格納
+  
   const tbody = document.getElementById('cytechUserTableBody');
   if (!tbody) return;
 
   if (users.length === 0) {
     tbody.innerHTML = `<tr><td colspan="7" style="padding: 30px; text-align: center; color: #94a3b8;">登録されたユーザーはいません</td></tr>`;
+    initCyTechAnalysisOptions();
+    updateCyTechAnalysis();
     return;
   }
 
@@ -208,6 +213,117 @@ async function loadCyTechUsers() {
           </td>
       </tr>
   `}).join('');
+
+  // 分析データの初期化と更新
+  initCyTechAnalysisOptions();
+  updateCyTechAnalysis();
+}
+
+/**
+ * 月別フィルターセレクトボックスの選択肢を動的に生成
+ */
+function initCyTechAnalysisOptions() {
+    const select = document.getElementById('cyFilterMonth');
+    if (!select) return;
+
+    const prevValue = select.value;
+
+    // 完了日 (end_date) からユニークな年月 (YYYY-MM) を抽出
+    const months = new Set();
+    cytechUsersData.forEach(u => {
+        if (u.status === 'done' && u.end_date) {
+            const dateParts = u.end_date.split('-');
+            if (dateParts.length >= 2) {
+                months.add(`${dateParts[0]}-${dateParts[1]}`); // YYYY-MM
+            }
+        }
+    });
+
+    const sortedMonths = Array.from(months).sort().reverse();
+
+    select.innerHTML = '<option value="all">全期間</option>';
+    sortedMonths.forEach(m => {
+        const [year, month] = m.split('-');
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = `${year}年${parseInt(month)}月`;
+        select.appendChild(opt);
+    });
+
+    if (prevValue && Array.from(select.options).some(o => o.value === prevValue)) {
+        select.value = prevValue;
+    } else if (sortedMonths.length > 0) {
+        select.value = sortedMonths[0]; // 初期表示は最新の月にする
+    } else {
+        select.value = 'all';
+    }
+}
+
+/**
+ * 分析パネルの表示を更新する
+ */
+function updateCyTechAnalysis() {
+    const filterMonth = document.getElementById('cyFilterMonth')?.value || 'all';
+    
+    const totalCount = cytechUsersData.length;
+    const allDoneUsers = cytechUsersData.filter(u => u.status === 'done');
+    const allDoingUsers = cytechUsersData.filter(u => u.status === 'doing');
+    
+    // クリア率 (全完了人数 / 全登録者 * 100)
+    const clearRate = totalCount > 0 ? Math.round((allDoneUsers.length / totalCount) * 100) : 0;
+
+    // 完了になった人 (選択された月でフィルター)
+    const filteredDone = allDoneUsers.filter(u => {
+        if (filterMonth === 'all') return true;
+        if (!u.end_date) return false;
+        return u.end_date.startsWith(filterMonth);
+    });
+
+    // 処理中の人 (常に最新の進行中メンバーを全員表示)
+    const filteredDoing = allDoingUsers;
+
+    // 完了表示更新
+    const doneCountEl = document.getElementById('cyDoneCount');
+    if (doneCountEl) doneCountEl.innerText = filteredDone.length;
+
+    const doneListEl = document.getElementById('cyDoneList');
+    if (doneListEl) {
+        if (filteredDone.length === 0) {
+            doneListEl.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:10px 0;">対象の完了者はいません</div>';
+        } else {
+            doneListEl.innerHTML = '<ul style="margin:0; padding-left:15px; line-height:1.6; list-style-type: square;">' + 
+                filteredDone.map(u => `<li><strong>${escapeHTML(u.username)}</strong> <span style="color:#64748b; font-size:0.75rem;">(${escapeHTML(u.step)} / 終了: ${u.end_date || '-'})</span></li>`).join('') +
+                '</ul>';
+        }
+    }
+
+    // 処理中表示更新
+    const doingCountEl = document.getElementById('cyDoingCount');
+    if (doingCountEl) doingCountEl.innerText = filteredDoing.length;
+
+    const doingListEl = document.getElementById('cyDoingList');
+    if (doingListEl) {
+        if (filteredDoing.length === 0) {
+            doingListEl.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:10px 0;">処理中の人はいません</div>';
+        } else {
+            doingListEl.innerHTML = '<ul style="margin:0; padding-left:15px; line-height:1.6; list-style-type: square;">' + 
+                filteredDoing.map(u => `<li><strong>${escapeHTML(u.username)}</strong> <span style="color:#64748b; font-size:0.75rem;">(${escapeHTML(u.step)} / 開始: ${u.start_date || '-'})</span></li>`).join('') +
+                '</ul>';
+        }
+    }
+
+    // クリア率・登録人数サマリー
+    const clearRateEl = document.getElementById('cyClearRate');
+    if (clearRateEl) clearRateEl.innerText = `${clearRate}%`;
+
+    const totalCountEl = document.getElementById('cyTotalCount');
+    if (totalCountEl) totalCountEl.innerText = totalCount;
+
+    const allDoneCountEl = document.getElementById('cyAllDoneCount');
+    if (allDoneCountEl) allDoneCountEl.innerText = allDoneUsers.length;
+
+    const allDoingCountEl = document.getElementById('cyAllDoingCount');
+    if (allDoingCountEl) allDoingCountEl.innerText = allDoingUsers.length;
 }
 
 // 登録モーダルを開く (リセット)
