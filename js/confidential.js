@@ -149,7 +149,7 @@ async function loadConfidentialInfo() {
                         <td style="padding: 12px; width: 20%;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span id="pw-text-${item.id}" style="font-family: monospace; color: #000;">********</span>
-                                <button onclick="togglePwView(${item.id}, '${escapeHTML(item.password)}')" class="glass-icon-btn" style="color: #6366f1; padding: 2px 6px; font-size: 0.7rem;">表示</button>
+                                <button onclick="togglePwView(this, ${item.id}, '${escapeHTML(item.password)}')" class="glass-icon-btn" style="color: #6366f1; padding: 2px 6px; font-size: 0.7rem;">表示</button>
                             </div>
                         </td>
                         <td style="padding: 12px; font-size: 0.8rem; color: rgba(0,0,0,0.6); width: 20%;">${escapeHTML(item.notes || '-')}</td>
@@ -195,9 +195,8 @@ async function loadConfidentialInfo() {
 }
 
 // パスワードの伏せ字切り替え
-function togglePwView(id, actualPw) {
+function togglePwView(btn, id, actualPw) {
     const el = document.getElementById(`pw-text-${id}`);
-    const btn = event.target;
     if (el.innerText === '********') {
         el.innerText = actualPw;
         btn.innerText = '隠す';
