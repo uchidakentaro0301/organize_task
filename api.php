@@ -15,6 +15,11 @@ if (!$user_id && $action !== 'login_google') {
     exit;
 }
 
+function backlog_payload_id(array $d, $key1, $key2): ?int {
+    $val = $d[$key1] ?? $d[$key2] ?? null;
+    return ($val === null || $val === '') ? null : (int)$val;
+}
+
 switch ($action) {
     case 'login_google':
         $data = json_decode(file_get_contents('php://input'), true);
@@ -34,7 +39,7 @@ switch ($action) {
         }
         break;
 
-    // --- カテゴリー管理 ---
+    // --- 通常タスク用カテゴリー管理 ---
     case 'fetch_categories':
         $stmt = $pdo->prepare("SELECT id, name FROM categories WHERE user_id = ? ORDER BY name ASC");
         $stmt->execute([$user_id]);
@@ -128,7 +133,7 @@ switch ($action) {
         echo json_encode(['success' => true, 'data' => $stats]);
         break;
 
-    // --- カテゴリー統計 [新規追加] ---
+    // --- カテゴリー統計 ---
     case 'get_category_stats':
         $sql = "SELECT c.name, COUNT(t.id) as count 
                 FROM categories c 
@@ -239,31 +244,25 @@ switch ($action) {
     
     case 'save_free_note':
         $d = json_decode(file_get_contents('php://input'), true);
-        // ON DUPLICATE KEY UPDATE を使用して存在しなければ挿入、あれば更新
         $stmt = $pdo->prepare("INSERT INTO free_notes (user_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = ?");
         $stmt->execute([$user_id, $d['content'], $d['content']]);
         echo json_encode(['success' => true]);
         break;
 
-    // --- CyTech進捗統計 [新規追加] ---
+    // --- CyTech進捗統計 ---
     case 'get_cytech_stats':
         $today = date('Y-m-d');
-        // 今週の開始日（月曜日）を算出
         $monday = date('Y-m-d', strtotime('monday this week'));
-        // 今月の開始日を算出
         $month_first = date('Y-m-01');
 
-        // 今週完了数
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM cytech_users WHERE user_id = ? AND status = 'done' AND end_date >= ?");
         $stmt->execute([$user_id, $monday]);
         $weekDone = $stmt->fetchColumn();
 
-        // 今月完了数
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM cytech_users WHERE user_id = ? AND status = 'done' AND end_date >= ?");
         $stmt->execute([$user_id, $month_first]);
         $monthDone = $stmt->fetchColumn();
 
-        // 現在の処理中（doing）数
         $stmt = $pdo->prepare("SELECT COUNT(*) FROM cytech_users WHERE user_id = ? AND status = 'doing'");
         $stmt->execute([$user_id]);
         $doingCount = $stmt->fetchColumn();
@@ -276,58 +275,81 @@ switch ($action) {
         ]);
         break;
 
-        // --- 機密情報管理 ---
-        case 'fetch_confidential':
-            $stmt = $pdo->prepare("SELECT * FROM confidential_info WHERE user_id = ? ORDER BY id DESC");
-            $stmt->execute([$user_id]);
-            echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
-            break;
+    // --- 機密情報専用カテゴリー管理 [新規追加] ---
+    case 'fetch_confidential_categories':
+        $stmt = $pdo->prepare("SELECT id, name FROM confidential_categories WHERE user_id = ? ORDER BY name ASC");
+        $stmt->execute([$user_id]);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+        break;
 
-        case 'add_confidential':
-            $d = json_decode(file_get_contents('php://input'), true);
-            $stmt = $pdo->prepare("INSERT INTO confidential_info (user_id, title, login_id, password, notes) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$user_id, $d['title'], $d['login_id'], $d['password'], $d['notes']]);
+    case 'add_confidential_category':
+        $d = json_decode(file_get_contents('php://input'), true);
+        if (!empty($d['name'])) {
+            $stmt = $pdo->prepare("INSERT INTO confidential_categories (user_id, name) VALUES (?, ?)");
+            $stmt->execute([$user_id, $d['name']]);
             echo json_encode(['success' => true]);
-            break;
+        }
+        break;
 
-        case 'edit_confidential':
-            $d = json_decode(file_get_contents('php://input'), true);
-            $stmt = $pdo->prepare("UPDATE confidential_info SET title=?, login_id=?, password=?, notes=? WHERE id=? AND user_id=?");
-            $stmt->execute([$d['title'], $d['login_id'], $d['password'], $d['notes'], $d['id'], $user_id]);
-            echo json_encode(['success' => true]);
-            break;
+    // --- 機密情報管理 ---
+    case 'fetch_confidential':
+        if (!isset($_SESSION['confidential_unlocked']) || $_SESSION['confidential_unlocked'] !== true) {
+            echo json_encode([]); // 認証前は空配列を返す
+            exit;
+        }
+        $sql = "SELECT ci.*, cc.name as categoryName 
+                FROM confidential_info ci 
+                LEFT JOIN confidential_categories cc ON ci.confidential_category_id = cc.id 
+                WHERE ci.user_id = ? 
+                ORDER BY cc.name ASC, ci.title ASC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$user_id]);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+        break;
 
-        case 'delete_confidential':
-            $d = json_decode(file_get_contents('php://input'), true);
-            $stmt = $pdo->prepare("DELETE FROM confidential_info WHERE id=? AND user_id=?");
-            $stmt->execute([$d['id'], $user_id]);
-            echo json_encode(['success' => true]);
-            break;
-        
-        // --- 機密情報パスワード認証 ---
-case 'check_confidential_status':
-    // パスワードが設定されているか、および現在のセッションで認証済みかを確認
-    $stmt = $pdo->prepare("SELECT master_password FROM users WHERE id = ?");
-    $stmt->execute([$user_id]);
-    $user = $stmt->fetch();
-    
-    echo json_encode([
-        'hasPassword' => !empty($user['master_password']),
-        'isUnlocked' => isset($_SESSION['confidential_unlocked']) && $_SESSION['confidential_unlocked'] === true
-    ]);
-    break;
-
-case 'set_master_password':
-    $d = json_decode(file_get_contents('php://input'), true);
-    if (!empty($d['password'])) {
-        // パスワードをハッシュ化して保存
-        $hashed = password_hash($d['password'], PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("UPDATE users SET master_password = ? WHERE id = ?");
-        $stmt->execute([$hashed, $user_id]);
-        $_SESSION['confidential_unlocked'] = true; // 設定直後は解除状態にする
+    case 'add_confidential':
+        $d = json_decode(file_get_contents('php://input'), true);
+        $stmt = $pdo->prepare("INSERT INTO confidential_info (user_id, title, login_id, password, notes, confidential_category_id) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$user_id, $d['title'], $d['login_id'], $d['password'], $d['notes'], $d['category_id']]);
         echo json_encode(['success' => true]);
-    }
-    break;
+        break;
+
+    case 'edit_confidential':
+        $d = json_decode(file_get_contents('php://input'), true);
+        $stmt = $pdo->prepare("UPDATE confidential_info SET title=?, login_id=?, password=?, notes=?, confidential_category_id=? WHERE id=? AND user_id=?");
+        $stmt->execute([$d['title'], $d['login_id'], $d['password'], $d['notes'], $d['category_id'], $d['id'], $user_id]);
+        echo json_encode(['success' => true]);
+        break;
+
+    case 'delete_confidential':
+        $d = json_decode(file_get_contents('php://input'), true);
+        $stmt = $pdo->prepare("DELETE FROM confidential_info WHERE id=? AND user_id=?");
+        $stmt->execute([$d['id'], $user_id]);
+        echo json_encode(['success' => true]);
+        break;
+    
+    // --- 機密情報パスワード認証 ---
+    case 'check_confidential_status':
+        $stmt = $pdo->prepare("SELECT master_password FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $user = $stmt->fetch();
+        
+        echo json_encode([
+            'hasPassword' => !empty($user['master_password']),
+            'isUnlocked' => isset($_SESSION['confidential_unlocked']) && $_SESSION['confidential_unlocked'] === true
+        ]);
+        break;
+
+    case 'set_master_password':
+        $d = json_decode(file_get_contents('php://input'), true);
+        if (!empty($d['password'])) {
+            $hashed = password_hash($d['password'], PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("UPDATE users SET master_password = ? WHERE id = ?");
+            $stmt->execute([$hashed, $user_id]);
+            $_SESSION['confidential_unlocked'] = true; // 設定直後は解除状態にする
+            echo json_encode(['success' => true]);
+        }
+        break;
 
     case 'verify_master_password':
         $d = json_decode(file_get_contents('php://input'), true);
@@ -341,17 +363,6 @@ case 'set_master_password':
         } else {
             echo json_encode(['success' => false, 'message' => 'パスワードが正しくありません']);
         }
-        break;
-
-    // 既存の fetch_confidential を修正：認証済みでない場合はデータを返さない
-    case 'fetch_confidential':
-        if (!isset($_SESSION['confidential_unlocked']) || $_SESSION['confidential_unlocked'] !== true) {
-            echo json_encode([]); // 認証前は空配列を返す
-            exit;
-        }
-        $stmt = $pdo->prepare("SELECT * FROM confidential_info WHERE user_id = ? ORDER BY id DESC");
-        $stmt->execute([$user_id]);
-        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
         break;
 
     default:
