@@ -87,6 +87,11 @@ function showView(viewName) {
       case 'confidential':
           if (typeof loadConfidentialInfo === 'function') loadConfidentialInfo();
           break;
+          case 'team_development':
+        if (typeof initTeamDevelopment === 'function') {
+            initTeamDevelopment();
+        }
+        break;
   }
 }
 

@@ -1,0 +1,36 @@
+/* css/team_development.css - チーム開発画面専用スタイル */
+
+.team-dev-container {
+    width: 100%;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.team-dev-placeholder {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 40px 20px;
+    text-align: center;
+    color: #ffffff;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    margin-top: 20px;
+}
+
+.team-dev-placeholder h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.team-dev-placeholder p {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.placeholder-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}

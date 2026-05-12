@@ -13,6 +13,7 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/board.css">
     <link rel="stylesheet" href="css/dashboard_layout.css">
+    <link rel="stylesheet" href="css/team_development.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -64,6 +65,9 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
                 <button type="button" onclick="showView('cytech_users')" id="nav-cytech_users" class="nav-item">
                     <span class="icon">👥</span> <span class="nav-text">CyTechユーザー</span>
                 </button>
+                <button type="button" onclick="showView('team_development')" id="nav-team_development" class="nav-item">
+                    <span class="icon">👥</span> <span class="nav-text">チーム開発</span>
+                </button>
                 <button type="button" onclick="showView('free_book')" id="nav-free_book" class="nav-item">
                     <span class="icon">📖</span> <span class="nav-text">free book</span>
                 </button>
@@ -91,6 +95,9 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
         </aside>
 
         <main class="main-content">
+            <div id="team_developmentView" class="view">
+                <?php include 'team_development.php'; ?>
+            </div>
             <div id="cytech_usersView" class="view">
                 <?php include 'cytech_users.php'; ?>
             </div>
@@ -354,6 +361,7 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
     <script src="js/dashboard.js"></script>
     <script src="js/dashboard_init.js"></script> 
     <script src="js/confidential.js"></script>
+    <script src="js/team_development.js"></script>
 <?php endif; ?>
 
 <svg style="display: none;">
