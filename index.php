@@ -1,5 +1,5 @@
 <?php
-require 'db.php'; 
+require 'config/db.php';
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 ?>
 <!DOCTYPE html>
@@ -10,16 +10,16 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
     <title>My little Backlog</title>
     <link rel="icon" href="data:,">
     
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/board.css">
-    <link rel="stylesheet" href="css/dashboard_layout.css">
-    <link rel="stylesheet" href="css/team_development.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/board.css">
+    <link rel="stylesheet" href="assets/css/dashboard_layout.css">
+    <link rel="stylesheet" href="assets/css/team_development.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     
-    <script src="js/auth.js"></script>
+    <script src="assets/js/auth.js"></script>
 </head>
 <body>
 
@@ -47,7 +47,7 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
             <div class="login-footer"><p>&copy; 2026 My Backlog Team</p></div>
         </div>
     </div>
-    <script src="js/blackhole.js"></script>
+    <script src="assets/js/blackhole.js"></script>
 
 <?php else: ?>
 
@@ -96,18 +96,18 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
         <main class="main-content">
             <div id="team_developmentView" class="view">
-                <?php include 'team_development.php'; ?>
+                <?php include 'includes/team_development.php'; ?>
             </div>
             <div id="cytech_usersView" class="view">
-                <?php include 'cytech_users.php'; ?>
+                <?php include 'includes/cytech_users.php'; ?>
             </div>
 
             <div id="free_bookView" class="view">
-                <?php include 'free_book.php'; ?>
+                <?php include 'includes/free_book.php'; ?>
             </div>
 
             <div id="confidentialView" class="view">
-                <?php include 'confidential.php'; ?>
+                <?php include 'includes/confidential.php'; ?>
             </div>
             
             <div id="boardView" class="view active">
@@ -356,12 +356,12 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
         </div>
     </div>
 
-    <script src="js/script.js"></script>
-    <script src="js/board.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/dashboard_init.js"></script> 
-    <script src="js/confidential.js"></script>
-    <script src="js/team_development.js"></script>
+    <script src="assets/js/script.js"></script>
+    <script src="assets/js/board.js"></script>
+    <script src="assets/js/dashboard.js"></script>
+    <script src="assets/js/dashboard_init.js"></script>
+    <script src="assets/js/confidential.js"></script>
+    <script src="assets/js/team_development.js"></script>
 <?php endif; ?>
 
 <svg style="display: none;">

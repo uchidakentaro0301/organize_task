@@ -1,5 +1,5 @@
 <?php
-require 'db.php'; // session_start() 済み想定
+require 'config/db.php'; // session_start() 済み想定
 
 $_SESSION = [];
 if (ini_get('session.use_cookies')) {

@@ -47,5 +47,5 @@
     </div>
 </div>
 
-<link rel="stylesheet" href="css/free_book.css">
-<script src="js/free_book.js"></script>
+<link rel="stylesheet" href="assets/css/free_book.css">
+<script src="assets/js/free_book.js"></script>
